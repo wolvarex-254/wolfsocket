@@ -63,6 +63,11 @@ type MediaUploadData = {
 	height?: number
 	waveform?: Uint8Array
 	backgroundArgb?: number
+	isAnimated?: boolean
+	isAiSticker?: boolean
+	isAvatar?: boolean
+	isLottie?: boolean
+	accessibilityLabel?: string
 }
 
 const MIMETYPE_MAP: { [T in MediaType]?: string } = {
@@ -104,6 +109,19 @@ export const generateLinkPreviewIfRequired = async (
 			logger?.warn({ trace: error.stack }, 'url generation failed')
 		}
 	}
+}
+
+const applyStickerFlags = (message: proto.Message, uploadData: MediaUploadData) => {
+	const sticker = message.stickerMessage
+	if (!sticker) return message
+
+	if (typeof uploadData.isAiSticker === 'boolean') sticker.isAiSticker = uploadData.isAiSticker
+	if (typeof uploadData.isAvatar === 'boolean') sticker.isAvatar = uploadData.isAvatar
+	if (typeof uploadData.isLottie === 'boolean') sticker.isLottie = uploadData.isLottie
+	if (typeof uploadData.accessibilityLabel === 'string') sticker.accessibilityLabel = uploadData.accessibilityLabel
+	sticker.stickerSentTs ||= Date.now()
+
+	return message
 }
 
 const assertColor = async (color: any) => {
@@ -169,7 +187,7 @@ export const prepareWAMessageMedia = async (
 
 			Object.assign(obj[key as keyof proto.Message]!, { ...uploadData, media: undefined })
 
-			return obj
+			return applyStickerFlags(obj, uploadData)
 		}
 	}
 
@@ -217,7 +235,7 @@ export const prepareWAMessageMedia = async (
 			await options.mediaCache!.set(cacheableKey, WAProto.Message.encode(obj).finish())
 		}
 
-		return obj
+		return applyStickerFlags(obj, uploadData)
 	}
 
 	const requiresDurationComputation = mediaType === 'audio' && typeof uploadData.seconds === 'undefined'
@@ -321,7 +339,7 @@ export const prepareWAMessageMedia = async (
 		await options.mediaCache!.set(cacheableKey, WAProto.Message.encode(obj).finish())
 	}
 
-	return obj
+	return applyStickerFlags(obj, uploadData)
 }
 
 export const prepareDisappearingMessageSettingContent = (ephemeralExpiration?: number) => {

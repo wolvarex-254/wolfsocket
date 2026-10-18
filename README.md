@@ -2,6 +2,16 @@
 
 A [Baileys](https://github.com/WhiskeySockets/Baileys) fork maintained under **WOLF TECH**, adding native **Group Status** support — posting text, image, video, audio, and sticker updates that are visible only within a specific WhatsApp group (distinct from the regular `status@broadcast` story that goes to your whole contact list).
 
+Enhanced sticker flags are supported through the normal message API:
+
+```js
+await sock.sendMessage(jid, {
+	sticker: webpBuffer,
+	isAiSticker: true,
+	accessibilityLabel: 'Premium sticker'
+})
+```
+
 > This is a fork, not a replacement. Everything in upstream Baileys works exactly the same — `wolfsocket` adds one new socket method on top: `sock.sendGroupStatus()`.
 
 ## Install
@@ -43,10 +53,10 @@ await sock.sendGroupStatus(groupJid, { sticker: stickerBuffer })
 
 ### `sock.sendGroupStatus(jid, content)`
 
-| param     | type                                                              | description                                    |
-|-----------|-------------------------------------------------------------------|-------------------------------------------------|
-| `jid`     | `string`                                                          | group JID (`...@g.us`)                          |
-| `content` | `AnyMessageContent`                                               | same content shape accepted by `sock.sendMessage` |
+| param     | type                | description                                       |
+| --------- | ------------------- | ------------------------------------------------- |
+| `jid`     | `string`            | group JID (`...@g.us`)                            |
+| `content` | `AnyMessageContent` | same content shape accepted by `sock.sendMessage` |
 
 Returns a `Promise<WAMessage>` with the sent message's key.
 
