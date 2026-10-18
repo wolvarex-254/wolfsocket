@@ -1,28 +1,16 @@
 # wolfsocket
 
-A [Baileys](https://github.com/WhiskeySockets/Baileys) fork maintained under **WOLF TECH**, adding native **Group Status** support — posting text, image, video, audio, and sticker updates that are visible only within a specific WhatsApp group (distinct from the regular `status@broadcast` story that goes to your whole contact list).
+`wolfsocket` is a [Baileys](https://github.com/WhiskeySockets/Baileys) fork maintained by **WOLF TECH**. It preserves the upstream API while adding native group-status messages, enhanced sticker fields, and native WhatsApp table rendering for Markdown AI responses.
 
-Enhanced sticker flags are supported through the normal message API:
-
-```js
-await sock.sendMessage(jid, {
-	sticker: webpBuffer,
-	isAiSticker: true,
-	accessibilityLabel: 'Premium sticker'
-})
-```
-
-> This is a fork, not a replacement. Everything in upstream Baileys works exactly the same — `wolfsocket` adds one new socket method on top: `sock.sendGroupStatus()`.
-
-## Install
+## Installation
 
 ```bash
 npm install wolfsocket
 ```
 
-## Quick start
+The package is ESM and requires Node.js 20 or newer.
 
-Usage is identical to upstream Baileys — same `makeWASocket`, same auth flow, same `sendMessage`. The only addition is `sock.sendGroupStatus()`:
+## Quick start
 
 ```js
 import makeWASocket, { useMultiFileAuthState } from 'wolfsocket'
@@ -30,42 +18,107 @@ import makeWASocket, { useMultiFileAuthState } from 'wolfsocket'
 const { state, saveCreds } = await useMultiFileAuthState('auth_info')
 const sock = makeWASocket({ auth: state })
 sock.ev.on('creds.update', saveCreds)
+```
 
-// text group status
-await sock.sendGroupStatus(groupJid, { text: 'hello from the group status feature' })
+## Native Markdown tables
 
-// image group status
-await sock.sendGroupStatus(groupJid, { image: imageBuffer, caption: 'caption text' })
+Send an AI response containing Markdown pipe tables through `markdownTable`. WhatsApp renders each detected table with its native rich-table interface while preserving surrounding prose.
 
-// video group status
-await sock.sendGroupStatus(groupJid, { video: videoBuffer, caption: 'caption', gifPlayback: false })
+```js
+const aiResponse = `Current plans:
 
-// audio group status
-await sock.sendGroupStatus(groupJid, { audio: audioBuffer, mimetype: 'audio/ogg; codecs=opus', ptt: true })
+| Plan | Storage | Price |
+| --- | ---: | ---: |
+| Basic | 10 GB | $5 |
+| Pro | 100 GB | $15 |
 
-// sticker group status
+Choose the plan that works for you.`
+
+await sock.sendMessage(jid, {
+	markdownTable: aiResponse,
+	tableTitle: 'Plan comparison'
+})
+```
+
+Supported behavior:
+
+- Multiple tables in one response
+- Text before, between, and after tables
+- Native heading and data rows
+- Escaped pipe characters (`\|`)
+- Optional title for the first table
+- Validation that every row has the same number of columns
+
+The lower-level helpers are also exported:
+
+```js
+import { parseMarkdownTables, markdownToAIRichResponse } from 'wolfsocket'
+
+const submessages = parseMarkdownTables(markdown, { title: 'Results' })
+const richResponse = markdownToAIRichResponse(markdown, { title: 'Results' })
+```
+
+## Group status
+
+`sendGroupStatus()` posts an update visible only inside a particular WhatsApp group. The group JID must end in `@g.us`.
+
+```js
+await sock.sendGroupStatus(groupJid, { text: 'Hello, group!' })
+
+await sock.sendGroupStatus(groupJid, {
+	image: imageBuffer,
+	caption: 'New image'
+})
+
+await sock.sendGroupStatus(groupJid, {
+	video: videoBuffer,
+	caption: 'New video'
+})
+
+await sock.sendGroupStatus(groupJid, {
+	audio: audioBuffer,
+	mimetype: 'audio/ogg; codecs=opus',
+	ptt: true
+})
+
 await sock.sendGroupStatus(groupJid, { sticker: stickerBuffer })
 ```
 
-`groupJid` is a normal group JID (ends in `@g.us`) — the same one you'd pass to `sock.sendMessage()`.
-
-## API
-
 ### `sock.sendGroupStatus(jid, content)`
 
-| param     | type                | description                                       |
-| --------- | ------------------- | ------------------------------------------------- |
-| `jid`     | `string`            | group JID (`...@g.us`)                            |
-| `content` | `AnyMessageContent` | same content shape accepted by `sock.sendMessage` |
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `jid` | `string` | Target group JID (`...@g.us`) |
+| `content` | `AnyMessageContent` | Content accepted by `sock.sendMessage()` |
 
-Returns a `Promise<WAMessage>` with the sent message's key.
+Returns a `Promise<WAMessage>` containing the sent message key.
 
-## What's different from upstream Baileys
+## Enhanced sticker fields
 
-- Adds `src/Socket/groupStatus.ts`, wired into `sock.sendGroupStatus()`.
-- Fixes a `mediatype` stanza-detection gap in `relayMessage` that caused media (image/video/etc.) group-status posts to silently fail to render correctly, while text posts worked fine. See `CHANGES.md` for details.
-- No other behavior changes — everything else is stock Baileys.
+The regular message API supports additional sticker properties represented by the current WhatsApp protobuf:
+
+```js
+await sock.sendMessage(jid, {
+	sticker: webpBuffer,
+	isAiSticker: true,
+	isAvatar: false,
+	isLottie: false,
+	accessibilityLabel: 'AI-generated sticker'
+})
+```
+
+These fields do not convert a WebP file into WhatsApp's signed premium `application/was` sticker format.
+
+## Differences from upstream Baileys
+
+- Adds `sock.sendGroupStatus()` for text and media group-status updates.
+- Adds Markdown-to-native-table parsing through the `markdownTable` message property.
+- Exports `parseMarkdownTables()` and `markdownToAIRichResponse()`.
+- Supports enhanced sticker protobuf fields.
+- Fixes media stanza detection required by group-status messages.
+
+All other standard Baileys APIs remain available.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). This package is a modified fork of [Baileys](https://github.com/WhiskeySockets/Baileys) by Rajeh Taher / WhiskeySockets, used under its original MIT license. The original copyright notice is preserved in full; modifications and additions (including Group Status support) by Briton Kiplangat (Silent Wolf) / WOLF TECH are licensed under the same terms.
+MIT. See [LICENSE](./LICENSE). The original Baileys copyright notice is preserved. Modifications by Briton Kiplangat (Silent Wolf) / WOLF TECH are licensed under the same terms.

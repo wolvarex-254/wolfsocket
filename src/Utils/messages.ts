@@ -41,6 +41,7 @@ import {
 	type MediaDownloadOptions
 } from './messages-media'
 import { shouldIncludeReportingToken } from './reporting-utils'
+import { markdownToAIRichResponse } from './rich-response'
 
 type ExtractByKey<T, K extends PropertyKey> = T extends Record<K, any> ? T : never
 type RequireKey<T, K extends keyof T> = T & {
@@ -451,6 +452,10 @@ export const generateWAMessageContent = async (
 		}
 
 		m.extendedTextMessage = extContent
+	} else if (hasNonNullishProperty(message, 'markdownTable')) {
+		const richResponse = markdownToAIRichResponse(message.markdownTable, { title: message.tableTitle })
+		richResponse.contextInfo = { ...richResponse.contextInfo, ...message.contextInfo }
+		m.botForwardedMessage = { message: { richResponseMessage: richResponse } }
 	} else if (hasNonNullishProperty(message, 'contacts')) {
 		const contactLen = message.contacts.contacts.length
 		if (!contactLen) {

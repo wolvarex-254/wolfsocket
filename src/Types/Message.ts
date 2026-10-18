@@ -254,6 +254,12 @@ export type AnyRegularMessageContent = (
 				contacts: proto.Message.IContactMessage[]
 			}
 	  }
+	| ({
+			/** Markdown containing one or more pipe tables to render natively. */
+			markdownTable: string
+			/** Optional title shown above the first native table. */
+			tableTitle?: string
+	  } & Contextable)
 	| {
 			location: WALocationMessage
 	  }
