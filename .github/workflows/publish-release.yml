@@ -30,22 +30,8 @@ jobs:
       - name: Upgrade npm to a version that supports Trusted Publishers
         run: npm install -g npm@11
 
-      - name: Enable Corepack and Set Yarn Version
-        run: |
-          corepack enable
-          corepack prepare yarn@4.x --activate
-
-      - name: Restore Yarn Cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: .yarn/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
       - name: Install Dependencies
-        run: yarn install --immutable
+        run: npm ci
 
       - name: Publish WolfSocket to npm
         run: npm publish --access public --provenance --tag latest
@@ -59,10 +45,10 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Make Package
-        run: yarn pack
+        run: npm pack --pack-destination .
 
       - name: Rename Pack
-        run: mv *.tgz baileys.tgz
+        run: mv wolfsocket-*.tgz wolfsocket.tgz
 
       - name: Create Release
         uses: meeDamian/github-release@2.0
@@ -76,7 +62,6 @@ jobs:
           body: ${{ steps.generate_changelog.outputs.changelog }}
           draft: false
           prerelease: false
-          files: >
-            baileys.tgz
+          files: wolfsocket.tgz
           gzip: folders
           allow_override: true
