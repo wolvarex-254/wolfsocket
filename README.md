@@ -58,6 +58,25 @@ const submessages = parseMarkdownTables(markdown, { title: 'Results' })
 const richResponse = markdownToAIRichResponse(markdown, { title: 'Results' })
 ```
 
+## Article cards
+
+Send a WhatsApp external-ad reply card with `sock.sendArticleCard()`. The card metadata is encoded in `contextInfo.externalAdReply`.
+
+```js
+await sock.sendArticleCard(jid, {
+	text: 'Learn more in these articles:',
+	title: 'How to create and share a status',
+	body: 'WhatsApp Help Center',
+	url: 'https://faq.whatsapp.com/123456',
+	thumbnailUrl: 'https://example.com/help-center.png',
+	mediaType: 1,
+	renderLargerThumbnail: true,
+	showAdAttribution: true
+})
+```
+
+`text`, `body`, and `thumbnailUrl` are optional. `mediaType` accepts the protobuf image (`1`) or video (`2`) value. WhatsApp controls the final card appearance and attribution label.
+
 ## Group status
 
 `sendGroupStatus()` posts an update visible only inside a particular WhatsApp group. The group JID must end in `@g.us`.
@@ -113,6 +132,7 @@ These fields do not convert a WebP file into WhatsApp's signed premium `applicat
 
 - Adds `sock.sendGroupStatus()` for text and media group-status updates.
 - Adds Markdown-to-native-table parsing through the `markdownTable` message property.
+- Adds `sock.sendArticleCard()` for external-ad reply article cards.
 - Exports `parseMarkdownTables()` and `markdownToAIRichResponse()`.
 - Supports enhanced sticker protobuf fields.
 - Fixes media stanza detection required by group-status messages.

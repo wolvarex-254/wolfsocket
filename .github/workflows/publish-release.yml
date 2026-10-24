@@ -47,14 +47,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install --immutable
 
-      - name: Publish in NPM (as `baileys`)
+      - name: Publish WolfSocket to npm
         run: npm publish --access public --provenance --tag latest
-
-      - name: Publish in NPM (whiskeysockets scope)
-        run: |
-          npx json -I -f package.json -e "this.name='@whiskeysockets/baileys'"
-          npm publish --access public --provenance --tag latest
-          npx json -I -f package.json -e "this.name='baileys'"
 
       - name: Generate Changelog
         id: generate_changelog

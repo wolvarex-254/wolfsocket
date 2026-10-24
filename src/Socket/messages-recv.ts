@@ -11,6 +11,7 @@ import {
 	STATUS_EXPIRY_SECONDS
 } from '../Defaults'
 import type {
+	ArticleCardOptions,
 	GroupParticipant,
 	MessageReceiptType,
 	MessageRelayOptions,
@@ -2164,6 +2165,22 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 	return {
 		...sock,
+		sendArticleCard: (jid: string, card: ArticleCardOptions) =>
+			sock.sendMessage(jid, {
+				text: card.text ?? '',
+				contextInfo: {
+					externalAdReply: {
+						title: card.title,
+						body: card.body,
+						mediaType: card.mediaType ?? proto.ContextInfo.ExternalAdReplyInfo.MediaType.IMAGE,
+						thumbnailUrl: card.thumbnailUrl,
+						sourceUrl: card.url,
+						containsAutoReply: card.containsAutoReply,
+						renderLargerThumbnail: card.renderLargerThumbnail,
+						showAdAttribution: card.showAdAttribution
+					}
+				}
+			}),
 		sendMessageAck,
 		sendRetryRequest,
 		rejectCall,

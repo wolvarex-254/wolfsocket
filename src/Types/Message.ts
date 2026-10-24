@@ -149,6 +149,20 @@ export type EventMessageOptions = {
 	messageSecret?: Uint8Array<ArrayBufferLike>
 }
 
+/** Content and external-ad metadata for a WhatsApp article card. */
+export type ArticleCardOptions = {
+	/** Text displayed above the card. */
+	text?: string
+	title: string
+	body?: string
+	url: string
+	thumbnailUrl?: string
+	mediaType?: proto.ContextInfo.ExternalAdReplyInfo.MediaType
+	containsAutoReply?: boolean
+	renderLargerThumbnail?: boolean
+	showAdAttribution?: boolean
+}
+
 export type AlbumMessageOptions = {
 	/** Number of images expected in the album */
 	expectedImageCount?: number
