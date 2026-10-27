@@ -38,7 +38,7 @@ import {
 import { getUrlInfo } from '../Utils/link-preview'
 import { makeKeyedMutex, makeMutex } from '../Utils/make-mutex'
 import { getMessageReportingToken, shouldIncludeReportingToken } from '../Utils/reporting-utils'
-import { sendGroupStatus } from './groupStatus.js'
+import { sendGroupStatus, type GroupStatusOptions } from './groupStatus.js'
 import {
 	buildMergedTcTokenIndexWrite,
 	isTcTokenExpired,
@@ -1266,12 +1266,17 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		issuePrivacyTokens,
 		assertSessions,
 		relayMessage,
-		sendGroupStatus: (jid: string, content: AnyMessageContent) =>
-			sendGroupStatus(jid, content, {
-				relayMessage,
-				waUploadToServer,
-				userJid: authState.creds.me?.id
-			}),
+		sendGroupStatus: (jid: string, content: AnyMessageContent, options: GroupStatusOptions = {}) =>
+			sendGroupStatus(
+				jid,
+				content,
+				{
+					relayMessage,
+					waUploadToServer,
+					userJid: authState.creds.me?.id
+				},
+				options
+			),
 		sendReceipt,
 		sendReceipts,
 		readMessages,

@@ -2,7 +2,9 @@ import crypto from 'crypto'
 import { proto } from '../../WAProto/index.js'
 import { generateWAMessageContent, generateWAMessageFromContent } from '../Utils/index.js'
 import type { AnyMessageContent, WAMessage } from '../Types/index.js'
-import type { WAMediaUploadFunction } from '../Types/Message.js'
+import type { MediaGenerationOptions, WAMediaUploadFunction } from '../Types/Message.js'
+
+export type GroupStatusOptions = Pick<MediaGenerationOptions, 'backgroundColor' | 'font'>
 
 export type GroupStatusDeps = {
 	relayMessage: (jid: string, message: proto.IMessage, opts: { messageId: string }) => Promise<unknown>
@@ -17,17 +19,19 @@ export type GroupStatusDeps = {
  *
  * Accepts the same content shapes as sendMessage: { text }, { image, caption },
  * { video, caption, gifPlayback }, { audio, ptt, mimetype }, { sticker }, etc.
+ * Options support backgroundColor for text/voice statuses and font for text.
  */
 export const sendGroupStatus = async (
 	jid: string,
 	content: AnyMessageContent,
-	deps: GroupStatusDeps
+	deps: GroupStatusDeps,
+	options: GroupStatusOptions = {}
 ): Promise<WAMessage> => {
 	const { relayMessage, waUploadToServer, userJid } = deps
 
 	// generateWAMessageContent builds/uploads the inner message (handles
 	// media upload, thumbnails, waveform, etc. same as a normal send)
-	const inner = await generateWAMessageContent(content, { upload: waUploadToServer })
+	const inner = await generateWAMessageContent(content, { ...options, upload: waUploadToServer })
 
 	const messageSecret = crypto.randomBytes(32)
 
