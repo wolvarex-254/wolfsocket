@@ -4,6 +4,7 @@ import { proto } from '../../WAProto/index.js'
 import { DEFAULT_CACHE_TTLS, WA_DEFAULT_EPHEMERAL } from '../Defaults'
 import type {
 	AnyMessageContent,
+	ChannelStatus,
 	MediaConnInfo,
 	MessageReceiptType,
 	MessageRelayOptions,
@@ -13,7 +14,7 @@ import type {
 	WAMessageKey
 } from '../Types'
 import type { PaymentInviteOptions, RequestPaymentOptions, SendPaymentOptions } from '../Types/Payment'
-import type { SpamReportOptions } from '../Types/Report'
+import type { SpamReportOptions, SpamReportResult, SpamReportTargetResult } from '../Types/Report'
 import { SPAM_FLOWS, SPAM_REPORT_REASONS } from '../Types/Report'
 import type { StickerPack } from '../Types/StickerPack'
 import type { SetUsernameOptions, UsernameSource } from '../Types/Username'
@@ -28,16 +29,21 @@ import {
 	encodeSignedDeviceIdentity,
 	encodeWAMessage,
 	encryptMediaRetryRequest,
+	encryptPollVote,
 	extractDeviceJids,
 	generateMessageIDV2,
 	generateParticipantHashV2,
 	generateWAMessage,
+	getKeyAuthor,
 	getStatusCodeForMediaRetry,
 	getUrlFromDirectPath,
 	getWAUploadToServer,
+	isViewOnceMessage,
 	MessageRetryManager,
 	normalizeMessageContent,
 	parseAndInjectE2ESessions,
+	sha256,
+	shouldIncludeBizBinaryNode,
 	unixTimestampSeconds
 } from '../Utils'
 import { getUrlInfo } from '../Utils/link-preview'
@@ -58,6 +64,7 @@ import {
 	type FullJid,
 	getBinaryNodeChild,
 	getBinaryNodeChildren,
+	getBizBinaryNode,
 	isHostedLidUser,
 	isHostedPnUser,
 	isJidBot,
@@ -73,7 +80,38 @@ import {
 	S_WHATSAPP_NET
 } from '../WABinary'
 import { USyncQuery, USyncUser } from '../WAUSync'
-import { type ChannelStatusOptions, sendChannelStatus } from './channelStatus.js'
+import {
+	CHANNEL_STATUS_ECHO_TIMEOUT_MS,
+	type ChannelStatusContent,
+	type ChannelStatusFetchOptions,
+	type ChannelStatusOptions,
+	type NewsletterStatusSent,
+	fetchChannelStatusResponses,
+	fetchChannelStatuses,
+	reactChannelStatus,
+	revokeChannelStatus,
+	sendChannelStatus,
+	sendChannelStatusViewReceipt,
+	type ChannelStatusResponsesOptions,
+	type ChannelStatusResponsesResult
+} from './channelStatus.js'
+import { newsletterSendPollVote as sendNewsletterPollVote } from './channelPollVote.js'
+import {
+	cancelChannelPost,
+	fetchChannelScheduledPosts,
+	rescheduleChannelPost,
+	scheduleChannelPost,
+	sendChannelPostNow,
+	type ChannelScheduleFetchOptions,
+	type ChannelScheduleOptions
+} from './channelSchedule.js'
+import {
+	newsletterDirectoryList as listNewsletterDirectory,
+	newsletterDirectorySearch as searchNewsletterDirectory,
+	type NewsletterDirectoryListOptions,
+	type NewsletterDirectorySearchOptions
+} from './newsletterDirectory.js'
+import { type GroupHistoryDeps, type SendGroupHistoryOptions, sendGroupHistory } from './groupHistory.js'
 import { type GroupStatusOptions, sendGroupStatus } from './groupStatus.js'
 import { makeNewsletterSocket } from './newsletter'
 import {
@@ -91,7 +129,8 @@ import {
 	reportGroup,
 	reportNewsletter,
 	reportSpam,
-	reportStatus
+	reportStatus,
+	reportTarget
 } from './report.js'
 import { sendStickerPack } from './stickerPack.js'
 import {
@@ -111,6 +150,67 @@ import {
 	type UsernameQueryIds
 } from './username.js'
 
+/**
+ * Whether a device JID is one of our own devices. A LID device is compared with
+ * our LID and any other device with our PN: areJidsSameUser compares only the
+ * user part, and a PN can share its digits with our LID.
+ */
+export const isOwnDeviceJid = (jid: string, meId: string, meLid: string | undefined) =>
+	isLidUser(jid) || isHostedLidUser(jid) ? !!meLid && areJidsSameUser(jid, meLid) : areJidsSameUser(jid, meId)
+
+/**
+ * Stanza addressing for a resend to a single device (a retry). A resend to one
+ * of our own devices must name the chat as `recipient`; that device is
+ * addressed by LID as well as by PN, as handleReceipt already assumes.
+ */
+export const buildRetryResendAddressing = (
+	destinationJid: string,
+	participantJid: string,
+	meId: string,
+	meLid: string | undefined
+): BinaryNodeAttributes => {
+	if (isJidGroup(destinationJid)) {
+		return { to: destinationJid, participant: participantJid }
+	}
+
+	if (isOwnDeviceJid(participantJid, meId, meLid)) {
+		return { to: participantJid, recipient: destinationJid }
+	}
+
+	return { to: participantJid }
+}
+
+/**
+ * Add the close-friends audience marker to status content.
+ * Any contextInfo already on the content (e.g. mentions) is kept.
+ * Exported for testing; the socket wrapper is
+ * sendCloseFriendsStatus.
+ */
+export const closeFriendsStatusContent = (content: AnyMessageContent): AnyMessageContent => {
+	const existing = 'contextInfo' in content ? content.contextInfo : undefined
+	return {
+		...content,
+		contextInfo: {
+			...existing,
+			statusAudienceMetadata: {
+				audienceType: proto.ContextInfo.StatusAudienceMetadata.AudienceType.CLOSE_FRIENDS
+			}
+		}
+	} as AnyMessageContent
+}
+
+/**
+ * Build the receipt key used to mark a status as viewed.
+ * The key is read as someone else's message (fromMe: false) with
+ * the status author as participant.
+ * Exported for testing; the socket wrapper is markStatusViewed.
+ */
+export const buildStatusViewKey = (key: WAMessageKey, participant: string | undefined): WAMessageKey => ({
+	...key,
+	fromMe: false,
+	participant
+})
+
 export const makeMessagesSocket = (config: SocketConfig) => {
 	const {
 		logger,
@@ -120,7 +220,8 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		patchMessageBeforeSending,
 		cachedGroupMetadata,
 		enableRecentMessageCache,
-		maxMsgRetryCount
+		maxMsgRetryCount,
+		getMessage
 	} = config
 	const sock = makeNewsletterSocket(config)
 	const {
@@ -547,11 +648,18 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 
 		const meJid = jidNormalizedUser(authState.creds.me.id)
 
+		// On-demand history sync must carry privacy_sensitive: '1' or the
+		// server drops the request silently (upstream #2853).
+		const isHistorySync =
+			protocolMessage?.peerDataOperationRequestMessage?.peerDataOperationRequestType ===
+			proto.Message.PeerDataOperationRequestType.HISTORY_SYNC_ON_DEMAND
+
 		const msgId = await relayMessage(meJid, { protocolMessage }, {
 			additionalAttributes: {
 				category: 'peer',
 
-				push_priority: 'high_force'
+				push_priority: 'high_force',
+				...(isHistorySync ? { privacy_sensitive: '1' } : {})
 			},
 			additionalNodes: [
 				{
@@ -689,7 +797,8 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 			additionalNodes,
 			useUserDevicesCache,
 			useCachedGroupMetadata,
-			statusJidList
+			statusJidList,
+			addBizAttributes
 		}: MessageRelayOptions
 	) => {
 		const meId = assertMeId(authState.creds)
@@ -726,17 +835,10 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 
 		const extraAttrs: BinaryNodeAttributes = {}
 
-		if (participant) {
-			if (!isGroup && !isStatus) {
-				additionalAttributes = { ...additionalAttributes, device_fanout: 'false' }
-			}
-
-			const { user, device } = jidDecode(participant.jid)!
-			devices.push({
-				user,
-				device,
-				jid: participant.jid
-			})
+		// a retry resend is encrypted once, in the dedicated retry block below;
+		// adding the participant to the regular fan-out would encrypt it twice (479)
+		if (participant && !isGroup && !isStatus) {
+			additionalAttributes = { ...additionalAttributes, device_fanout: 'false' }
 		}
 
 		await authState.keys.transaction(async () => {
@@ -750,7 +852,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				const bytes = encodeNewsletterMessage(patched as proto.IMessage)
 				binaryNodeContent.push({
 					tag: 'plaintext',
-					attrs: {},
+					attrs: mediaType ? { mediatype: mediaType } : {},
 					content: bytes
 				})
 				const stanza: BinaryNode = {
@@ -848,7 +950,6 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 						//todo: revamp all this logic
 						// the goal is to follow with what I said above for each group, and instead of a true false map of ids, we can set an array full of those the app has already sent pkmsgs
 						senderKeyRecipients.push(deviceJid)
-						senderKeyMap[deviceJid] = true
 					}
 				}
 
@@ -869,6 +970,12 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 					shouldIncludeDeviceIdentity = shouldIncludeDeviceIdentity || result.shouldIncludeDeviceIdentity
 
 					participants.push(...result.nodes)
+					// A prepared SKDM is tracked per device; failed encryptions must be retried on the next send.
+					for (const { attrs } of result.nodes) {
+						if (attrs.jid) {
+							senderKeyMap[attrs.jid] = true
+						}
+					}
 				}
 
 				binaryNodeContent.push({
@@ -986,8 +1093,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 			}
 
 			if (isRetryResend) {
-				const isParticipantLid = isLidUser(participant!.jid)
-				const isMe = areJidsSameUser(participant!.jid, isParticipantLid ? meLid : meId)
+				const isMe = isOwnDeviceJid(participant!.jid, meId, meLid)
 
 				let messageToSend = message
 				if (isGroupOrStatus) {
@@ -1025,6 +1131,8 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 							}
 						})
 					: encodeWAMessage(messageToSend)
+
+				await assertSessions([participant!.jid])
 
 				const { type, ciphertext: encryptedContent } = await signalRepository.encryptMessage({
 					data: encodedMessageToSend,
@@ -1073,15 +1181,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 			// ensure the message is only sent to that person
 			// if a retry receipt is sent to everyone -- it'll fail decryption for everyone else who received the msg
 			if (participant) {
-				if (isJidGroup(destinationJid)) {
-					stanza.attrs.to = destinationJid
-					stanza.attrs.participant = participant.jid
-				} else if (areJidsSameUser(participant.jid, meId)) {
-					stanza.attrs.to = participant.jid
-					stanza.attrs.recipient = destinationJid
-				} else {
-					stanza.attrs.to = participant.jid
-				}
+				Object.assign(stanza.attrs, buildRetryResendAddressing(destinationJid, participant.jid, meId, meLid))
 			} else {
 				stanza.attrs.to = destinationJid
 			}
@@ -1094,6 +1194,12 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				})
 
 				logger.debug({ jid }, 'adding device identity')
+			}
+
+			// WA Web marks view once sends at the stanza level too, not just in the
+			// protobuf wrapper. Adding it here also covers retry resends.
+			if (isViewOnceMessage(message)) {
+				;(stanza.content as BinaryNode[]).push({ tag: 'meta', attrs: { view_once: 'true' } })
 			}
 
 			if (
@@ -1154,8 +1260,19 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				})
 			}
 
+			let alreadyHasBizNode = false
 			if (additionalNodes && additionalNodes.length > 0) {
 				;(stanza.content as BinaryNode[]).push(...additionalNodes)
+				alreadyHasBizNode = !addBizAttributes && additionalNodes.some(node => node.tag === 'biz')
+			}
+			const normalizedMsg = normalizeMessageContent(message)
+			// Biz binary node: required for buttons/list/template/native-flow
+			// messages to render (and for the secureMetaServiceLabel biz shelf).
+			if (
+				normalizedMsg &&
+				((!alreadyHasBizNode && shouldIncludeBizBinaryNode(normalizedMsg)) || addBizAttributes)
+			) {
+				;(stanza.content as BinaryNode[]).push(getBizBinaryNode(normalizedMsg))
 			}
 
 			logger.debug({ msgId }, `sending message to ${participants.length} devices`)
@@ -1229,7 +1346,8 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 			normalizedMessage.pollCreationMessage ||
 			normalizedMessage.pollCreationMessageV2 ||
 			normalizedMessage.pollCreationMessageV3 ||
-			normalizedMessage.pollUpdateMessage
+			normalizedMessage.pollUpdateMessage ||
+			normalizedMessage.pollAddOptionMessage
 		) {
 			return 'poll'
 		}
@@ -1380,6 +1498,265 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		return fullMsg
 	}
 
+	const sendMessage = async (jid: string, content: AnyMessageContent, options: MiscMessageGenerationOptions = {}) => {
+		const userJid = authState.creds.me!.id
+		if (
+			typeof content === 'object' &&
+			'disappearingMessagesInChat' in content &&
+			typeof content['disappearingMessagesInChat'] !== 'undefined' &&
+			isJidGroup(jid)
+		) {
+			const { disappearingMessagesInChat } = content
+			const value =
+				typeof disappearingMessagesInChat === 'boolean'
+					? disappearingMessagesInChat
+						? WA_DEFAULT_EPHEMERAL
+						: 0
+					: disappearingMessagesInChat
+			await groupToggleEphemeral(jid, value)
+		} else {
+			const fullMsg = await generateWAMessage(jid, content, {
+				logger,
+				userJid,
+				getUrlInfo: text =>
+					getUrlInfo(text, {
+						thumbnailWidth: linkPreviewImageThumbnailWidth,
+						fetchOpts: {
+							timeout: 3_000,
+							...(httpRequestOptions || {})
+						},
+						logger,
+						uploadImage: generateHighQualityLinkPreview ? waUploadToServer : undefined
+					}),
+				//TODO: CACHE
+				getProfilePicUrl: sock.profilePictureUrl,
+				getCallLink: sock.createCallLink,
+				upload: waUploadToServer,
+				mediaCache: config.mediaCache,
+				options: config.options,
+				messageId: generateMessageIDV2(sock.user?.id),
+				...options
+			})
+			const isEventMsg = 'event' in content && !!content.event
+			const isDeleteMsg = 'delete' in content && !!content.delete
+			const isEditMsg = 'edit' in content && !!content.edit
+			const isPinMsg = 'pin' in content && !!content.pin
+			const isPollMessage = 'poll' in content && !!content.poll
+			const additionalAttributes: BinaryNodeAttributes = {}
+			const additionalNodes: BinaryNode[] = []
+			// required for delete
+			if (isDeleteMsg) {
+				// if the chat is a group, and I am not the author, then delete the message as an admin
+				if (isJidGroup(content.delete?.remoteJid as string) && !content.delete?.fromMe) {
+					additionalAttributes.edit = '8'
+				} else {
+					additionalAttributes.edit = '7'
+				}
+			} else if (isEditMsg) {
+				additionalAttributes.edit = '1'
+			} else if (isPinMsg) {
+				additionalAttributes.edit = '2'
+			} else if (isPollMessage) {
+				additionalNodes.push({
+					tag: 'meta',
+					attrs: {
+						polltype: 'creation'
+					}
+				})
+			} else if (isEventMsg) {
+				additionalNodes.push({
+					tag: 'meta',
+					attrs: {
+						event_type: 'creation'
+					}
+				})
+			}
+
+			// Interactive messages in 1:1 chats also carry the `bot` node
+			// (gifted-btns does the same for private chats).
+			if (
+				!isJidGroup(jid) &&
+				('nativeFlow' in content || 'interactiveButtons' in content)
+			) {
+				additionalNodes.push({ tag: 'bot', attrs: { biz_bot: '1' } })
+			}
+
+			await relayMessage(jid, fullMsg.message!, {
+				messageId: fullMsg.key.id!,
+				useCachedGroupMetadata: options.useCachedGroupMetadata,
+				additionalAttributes,
+				statusJidList: options.statusJidList,
+				additionalNodes
+			})
+			if (config.emitOwnEvents) {
+				process.nextTick(async () => {
+					await messageMutex.mutex(() => upsertMessage(fullMsg, 'append'))
+				})
+			}
+
+			return fullMsg
+		}
+	}
+
+	/**
+	 * Pin a message in a chat for everyone, for `duration` seconds.
+	 * The server accepts 24 hours (86400), 7 days (604800) or
+	 * 30 days (2592000); defaults to 24 hours.
+	 *
+	 * Safety: the message must exist in the chat first. Pinning a
+	 * message that is not there gets the account flagged, so the pin
+	 * is only sent after the message is found in the store. A missing
+	 * message is refused here instead of sent.
+	 */
+	const pinMessage = async (
+		jid: string,
+		key: WAMessageKey,
+		duration: 86400 | 604800 | 2592000 = 86400
+	) => {
+		if (key.remoteJid && key.remoteJid !== jid) {
+			throw new Error(`refusing to pin message ${key.id}: it belongs to ${key.remoteJid}, not ${jid}`)
+		}
+		const found = typeof getMessage === 'function' ? await getMessage({ ...key, remoteJid: jid }) : undefined
+		if (!found) {
+			throw new Error(`refusing to pin message ${key.id} in ${jid}: message not found in this chat`)
+		}
+		return sendMessage(jid, { pin: key, type: proto.PinInChat.Type.PIN_FOR_ALL, time: duration })
+	}
+
+	/** Remove a pin from a message in a chat. */
+	const unpinMessage = async (jid: string, key: WAMessageKey) => {
+		return sendMessage(jid, { pin: key, type: proto.PinInChat.Type.UNPIN_FOR_ALL })
+	}
+
+	/**
+	 * Post a personal status (story) visible to your contacts.
+	 * Same content shapes as sendMessage: { text }, { image, caption },
+	 * { video, caption }, { audio, ptt }, { sticker }, etc.
+	 */
+	const sendPersonalStatus = async (content: AnyMessageContent, options: MiscMessageGenerationOptions = {}) => {
+		return sendMessage('status@broadcast', content, options)
+	}
+
+
+	/**
+	 * Post a personal status visible only to the given close friends.
+	 * The status carries the close-friends audience marker and is
+	 * fanned out only to `closeFriendJids`.
+	 */
+	const sendCloseFriendsStatus = async (
+		content: AnyMessageContent,
+		closeFriendJids: string[],
+		options: MiscMessageGenerationOptions = {}
+	) => {
+		return sendMessage('status@broadcast', closeFriendsStatusContent(content), {
+			...options,
+			statusJidList: closeFriendJids
+		})
+	}
+
+
+	/**
+	 * Mark a status as viewed. `key` is the status message key —
+	 * group status keys carry the group JID, personal status keys
+	 * carry 'status@broadcast'. `participant` is the status author
+	 * and defaults to your own JID.
+	 */
+	const markStatusViewed = async (key: WAMessageKey, participant?: string) => {
+		await readMessages([buildStatusViewKey(key, participant ?? authState.creds.me?.id)])
+	}
+
+	/**
+	 * React to a status (group or personal). `jid` is the group JID
+	 * for a group status, or 'status@broadcast' for a personal status
+	 * (pass your own JID in `statusJidList` for personal statuses,
+	 * as the reaction is fanned out to that list).
+	 */
+	const reactToStatus = async (
+		jid: string,
+		key: WAMessageKey,
+		emoji: string,
+		statusJidList?: string[]
+	) => {
+		return sendMessage(
+			jid,
+			{ react: { key, text: emoji } },
+			statusJidList ? { statusJidList } : {}
+		)
+	}
+
+	/**
+	 * Report spam two ways: by target JID (`sock.reportSpam(jid, options?)`,
+	 * one IQ, one summary) or by messages (`sock.reportSpam(messages,
+	 * options?)`, one IQ per message, one result per message).
+	 */
+	const reportSpamSocket = ((targetOrMessages: string | WAMessage[], options: SpamReportOptions = {}) =>
+		typeof targetOrMessages === 'string'
+			? reportTarget(targetOrMessages, reportDeps, options)
+			: reportSpam(targetOrMessages, reportDeps, options)) as {
+		(messages: WAMessage[], options?: SpamReportOptions): Promise<SpamReportResult[]>
+		(jid: string, options?: SpamReportOptions): Promise<SpamReportTargetResult>
+	}
+
+	/**
+	 * Vote on a poll by option name. The vote is encrypted with the poll
+	 * creation message's secret, so pass it in `pollInfo` — the fork does
+	 * not look the creation message up in any store. `creatorJid` defaults
+	 * to the author of `pollCreationMessageKey` (the same derivation the
+	 * vote decryption uses). The voter JID is the bot's LID when the poll
+	 * is LID-addressed, else its phone JID — receivers decrypt with the
+	 * voter JID from the vote message's key, so the wrong form makes the
+	 * vote undecryptable and it never counts. The vote is sent through the
+	 * raw pollUpdateMessage passthrough, so no new send plumbing was needed.
+	 */
+	const sendPollVote = async (
+		jid: string,
+		pollCreationMessageKey: WAMessageKey,
+		options: string | string[],
+		pollInfo: { messageSecret: Uint8Array; creatorJid?: string }
+	) => {
+		const meIdNormalised = jidNormalizedUser(assertMeId(authState.creds))
+		const meLidNormalised = authState.creds.me?.lid ? jidNormalizedUser(authState.creds.me.lid) : null
+		const pollMsgId = pollCreationMessageKey.id
+		if (!pollMsgId) {
+			throw new Boom('pollCreationMessageKey needs an id', { statusCode: 400 })
+		}
+
+		const optionNames = Array.isArray(options) ? options : [options]
+		if (!optionNames.length) {
+			throw new Boom('sendPollVote needs at least one option', { statusCode: 400 })
+		}
+
+		// The vote is decrypted by other clients with the voter JID from the
+		// vote message's key. In a LID-addressed group that is the voter's
+		// LID, but meIdNormalised is the phone JID — encrypting with it makes
+		// the vote fail AES-GCM auth on every client so it never counts, even
+		// though the send succeeds (2026-11-21, "Alice" poll: vote reported
+		// sent with an ID but the poll stayed 0/0). Use the LID when the poll
+		// is LID-addressed.
+		const creatorJid = pollInfo.creatorJid || getKeyAuthor(pollCreationMessageKey, meIdNormalised)
+		const voterJid = (creatorJid.endsWith('@lid') || pollCreationMessageKey.participant?.endsWith('@lid') || pollCreationMessageKey.addressingMode === 'lid') && meLidNormalised
+			? meLidNormalised
+			: meIdNormalised
+
+		const vote = encryptPollVote(
+			{ selectedOptions: optionNames.map(name => sha256(Buffer.from(name))) },
+			{
+				pollCreatorJid: creatorJid,
+				pollMsgId,
+				pollEncKey: pollInfo.messageSecret,
+				voterJid
+			}
+		)
+
+		return sendMessage(jid, {
+			pollUpdateMessage: {
+				pollCreationMessageKey,
+				vote,
+				senderTimestampMs: Date.now()
+			}
+		})
+	}
+
 	return {
 		...sock,
 		userDevicesCache,
@@ -1394,7 +1771,11 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 				{
 					relayMessage,
 					waUploadToServer,
-					userJid: authState.creds.me?.id
+					userJid: authState.creds.me?.id,
+					linkPreviewImageThumbnailWidth,
+					generateHighQualityLinkPreview,
+					httpRequestOptions,
+					logger
 				},
 				options
 			),
@@ -1407,6 +1788,146 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 					waUploadToServer,
 					userJid: authState.creds.me?.id
 				},
+				options
+			),
+		newsletterSendStatus: async (
+			jid: string,
+			content: ChannelStatusContent,
+			options: ChannelStatusOptions = {}
+		): Promise<NewsletterStatusSent> => {
+			const sent = await sendChannelStatus(
+				jid,
+				content,
+				{
+					sendNode,
+					waUploadToServer,
+					userJid: authState.creds.me?.id
+				},
+				options
+			)
+
+			// The server-assigned id of a posted status only arrives in the
+			// server echo of that status (an incoming <status> stanza,
+			// surfaced as 'newsletter.status'). The echo is a network round
+			// trip away, so attaching the listener right after the send
+			// cannot miss it. It is matched by the stanza id from the send.
+			// If the echo does not arrive in time (or the server rejected
+			// the post), the server id stays undefined — the send itself
+			// already went out.
+			const newsletterStatusServerId = await new Promise<string | undefined>(resolve => {
+				const onStatus = (status: ChannelStatus) => {
+					if (status.channelJid === jid && status.id === sent.id) {
+						clearTimeout(timer)
+						ev.off('newsletter.status', onStatus)
+						resolve(status.serverId)
+					}
+				}
+				const timer = setTimeout(() => {
+					ev.off('newsletter.status', onStatus)
+					resolve(undefined)
+				}, CHANNEL_STATUS_ECHO_TIMEOUT_MS)
+				ev.on('newsletter.status', onStatus)
+			})
+
+			return { ...sent, newsletterStatusServerId }
+		},
+		newsletterReactStatus: (jid: string, serverId: string, reaction: string | null) =>
+			reactChannelStatus(jid, serverId, reaction, { query, generateMessageTag }),
+		newsletterRevokeStatus: (jid: string, statusId: string) =>
+			revokeChannelStatus(jid, statusId, { query, generateMessageTag }),
+		newsletterFetchStatus: (jid: string, options: ChannelStatusFetchOptions) =>
+			fetchChannelStatuses(jid, options, { query, generateMessageTag }),
+		newsletterFetchStatusResponses: (jid: string, serverId: string, options: ChannelStatusResponsesOptions) =>
+			fetchChannelStatusResponses(jid, serverId, options, { query, generateMessageTag }),
+		newsletterSendStatusViewReceipt: (jid: string, receiptStanzaId: string, sortId: number) =>
+			sendChannelStatusViewReceipt(jid, receiptStanzaId, sortId, { sendNode }),
+		newsletterScheduleChannelPost: (
+			jid: string,
+			content: AnyMessageContent,
+			publishAtMs: number,
+			options: ChannelScheduleOptions = {}
+		) =>
+			scheduleChannelPost(
+				jid,
+				content,
+				publishAtMs,
+				{
+					sendNode,
+					waUploadToServer,
+					userJid: authState.creds.me?.id
+				},
+				options
+			),
+		newsletterRescheduleChannelPost: (
+			jid: string,
+			clientId: string,
+			content: AnyMessageContent,
+			publishAtMs: number,
+			options: ChannelScheduleOptions = {}
+		) =>
+			rescheduleChannelPost(
+				jid,
+				clientId,
+				content,
+				publishAtMs,
+				{
+					sendNode,
+					waUploadToServer,
+					userJid: authState.creds.me?.id,
+					query,
+					generateMessageTag
+				},
+				options
+			),
+		newsletterSendChannelPostNow: (
+			jid: string,
+			clientId: string,
+			content: AnyMessageContent,
+			options: ChannelScheduleOptions = {}
+		) =>
+			sendChannelPostNow(
+				jid,
+				clientId,
+				content,
+				{
+					sendNode,
+					waUploadToServer,
+					userJid: authState.creds.me?.id,
+					query,
+					generateMessageTag
+				},
+				options
+			),
+		newsletterCancelChannelPost: (jid: string, clientId: string) =>
+			cancelChannelPost(jid, clientId, { query, generateMessageTag }),
+		newsletterFetchChannelScheduledPosts: (jid: string, options: ChannelScheduleFetchOptions) =>
+			fetchChannelScheduledPosts(jid, options, { query, generateMessageTag }),
+		newsletterDirectorySearch: (searchText: string, options: NewsletterDirectorySearchOptions = {}) =>
+			searchNewsletterDirectory(searchText, options, { query, generateMessageTag }),
+		newsletterDirectoryList: (options: NewsletterDirectoryListOptions = {}) =>
+			listNewsletterDirectory(options, { query, generateMessageTag }),
+		pinMessage,
+		unpinMessage,
+		sendPersonalStatus,
+		sendCloseFriendsStatus,
+		markStatusViewed,
+		reactToStatus,
+		sendGroupHistory: (
+			jid: string,
+			receivers: string[],
+			messages: proto.IWebMessageInfo[],
+			options: SendGroupHistoryOptions = {}
+		) =>
+			sendGroupHistory(
+				jid,
+				receivers,
+				messages,
+				{
+					relayMessage,
+					waUploadToServer,
+					userJid: authState.creds.me?.id,
+					logger
+				} satisfies GroupHistoryDeps,
 				options
 			),
 		checkUsername: (username: string, includeSuggestions = true, sessionId?: string) =>
@@ -1424,7 +1945,7 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		USERNAME_QUERY_IDS,
 		USERNAME_CHECK_RESULT,
 		USERNAME_SOURCE,
-		reportSpam: (messages: WAMessage[], options: SpamReportOptions = {}) => reportSpam(messages, reportDeps, options),
+		reportSpam: reportSpamSocket,
 		reportContact: (jid: string, messages: WAMessage[], options: SpamReportOptions = {}) =>
 			reportContact(jid, messages, reportDeps, options),
 		reportGroup: (jid: string, messages: WAMessage[], options: SpamReportOptions = {}) =>
@@ -1515,95 +2036,9 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 
 			return message
 		},
-		sendMessage: async (jid: string, content: AnyMessageContent, options: MiscMessageGenerationOptions = {}) => {
-			const userJid = authState.creds.me!.id
-			if (
-				typeof content === 'object' &&
-				'disappearingMessagesInChat' in content &&
-				typeof content['disappearingMessagesInChat'] !== 'undefined' &&
-				isJidGroup(jid)
-			) {
-				const { disappearingMessagesInChat } = content
-				const value =
-					typeof disappearingMessagesInChat === 'boolean'
-						? disappearingMessagesInChat
-							? WA_DEFAULT_EPHEMERAL
-							: 0
-						: disappearingMessagesInChat
-				await groupToggleEphemeral(jid, value)
-			} else {
-				const fullMsg = await generateWAMessage(jid, content, {
-					logger,
-					userJid,
-					getUrlInfo: text =>
-						getUrlInfo(text, {
-							thumbnailWidth: linkPreviewImageThumbnailWidth,
-							fetchOpts: {
-								timeout: 3_000,
-								...(httpRequestOptions || {})
-							},
-							logger,
-							uploadImage: generateHighQualityLinkPreview ? waUploadToServer : undefined
-						}),
-					//TODO: CACHE
-					getProfilePicUrl: sock.profilePictureUrl,
-					getCallLink: sock.createCallLink,
-					upload: waUploadToServer,
-					mediaCache: config.mediaCache,
-					options: config.options,
-					messageId: generateMessageIDV2(sock.user?.id),
-					...options
-				})
-				const isEventMsg = 'event' in content && !!content.event
-				const isDeleteMsg = 'delete' in content && !!content.delete
-				const isEditMsg = 'edit' in content && !!content.edit
-				const isPinMsg = 'pin' in content && !!content.pin
-				const isPollMessage = 'poll' in content && !!content.poll
-				const additionalAttributes: BinaryNodeAttributes = {}
-				const additionalNodes: BinaryNode[] = []
-				// required for delete
-				if (isDeleteMsg) {
-					// if the chat is a group, and I am not the author, then delete the message as an admin
-					if (isJidGroup(content.delete?.remoteJid as string) && !content.delete?.fromMe) {
-						additionalAttributes.edit = '8'
-					} else {
-						additionalAttributes.edit = '7'
-					}
-				} else if (isEditMsg) {
-					additionalAttributes.edit = '1'
-				} else if (isPinMsg) {
-					additionalAttributes.edit = '2'
-				} else if (isPollMessage) {
-					additionalNodes.push({
-						tag: 'meta',
-						attrs: {
-							polltype: 'creation'
-						}
-					})
-				} else if (isEventMsg) {
-					additionalNodes.push({
-						tag: 'meta',
-						attrs: {
-							event_type: 'creation'
-						}
-					})
-				}
-
-				await relayMessage(jid, fullMsg.message!, {
-					messageId: fullMsg.key.id!,
-					useCachedGroupMetadata: options.useCachedGroupMetadata,
-					additionalAttributes,
-					statusJidList: options.statusJidList,
-					additionalNodes
-				})
-				if (config.emitOwnEvents) {
-					process.nextTick(async () => {
-						await messageMutex.mutex(() => upsertMessage(fullMsg, 'append'))
-					})
-				}
-
-				return fullMsg
-			}
-		}
+		sendMessage,
+		sendPollVote,
+		newsletterSendPollVote: (jid: string, parentServerId: string | number, options: string | string[]) =>
+			sendNewsletterPollVote(jid, parentServerId, options, { query, generateMessageTag }),
 	}
 }

@@ -20,6 +20,8 @@ import type {
 	MessageGenerationOptionsFromContent,
 	MessageUserReceipt,
 	MessageWithContextInfo,
+	NativeFlowButton,
+	NativeFlowButtonShorthand,
 	WAMediaUpload,
 	WAMessage,
 	WAMessageContent,
@@ -202,10 +204,11 @@ export const prepareWAMessageMedia = async (
 		)
 
 		const fileSha256B64 = fileSha256.toString('base64')
-		const { mediaUrl, directPath } = await options.upload(filePath, {
+		const { directPath, thumbnailDirectPath, thumbnailSha256 } = await options.upload(filePath, {
 			fileEncSha256B64: fileSha256B64,
 			mediaType: mediaType,
-			timeoutMs: options.mediaUploadTimeoutMs
+			timeoutMs: options.mediaUploadTimeoutMs,
+			newsletter: true
 		})
 
 		await fs.unlink(filePath)
@@ -213,10 +216,12 @@ export const prepareWAMessageMedia = async (
 		const obj = WAProto.Message.fromObject({
 			// todo: add more support here
 			[`${mediaType}Message`]: (MessageTypeProto as any)[mediaType].fromObject({
-				url: mediaUrl,
+				// url intentionally omitted — newsletters use directPath only
 				directPath,
 				fileSha256,
 				fileLength,
+				thumbnailDirectPath,
+				thumbnailSha256: thumbnailSha256 ? Buffer.from(thumbnailSha256, 'base64') : undefined,
 				...uploadData,
 				media: undefined
 			})
@@ -411,6 +416,136 @@ function hasOptionalProperty<T, K extends PropertyKey>(obj: T, key: K): obj is W
 	return typeof obj === 'object' && obj !== null && key in obj && (obj as any)[key] !== null
 }
 
+/**
+ * Build the native-flow button array for an interactiveMessage.
+ *
+ * Each entry of `nativeFlow` is either a shorthand button ({ id }, { copy },
+ * { url }, { call }, { sections }) or an already-shaped native-flow row
+ * which is passed through untouched.
+ *
+ * Optional top-level extras:
+ * - offerText (+ offerUrl, offerCode, offerExpiration) -> limited_time_offer
+ * - optionText (+ optionTitle) -> bottom_sheet
+ */
+export const prepareNativeFlowButtons = (
+	message: {
+		nativeFlow: NativeFlowButton[] | { buttons: NativeFlowButton[] }
+		offerText?: string
+		offerUrl?: string
+		offerCode?: string
+		offerExpiration?: number
+		optionText?: string
+		optionTitle?: string
+	}
+): proto.Message.InteractiveMessage.INativeFlowMessage => {
+	const buttons = message.nativeFlow
+	const isButtonsFieldArray = Array.isArray(buttons)
+	const correctedField = isButtonsFieldArray ? buttons : buttons.buttons
+	const messageParamsJson: { limited_time_offer?: unknown; bottom_sheet?: unknown } = {}
+	if (hasOptionalProperty(message, 'offerText') && !!message.offerText) {
+		Object.assign(messageParamsJson, {
+			limited_time_offer: {
+				text: message.offerText,
+				url: message.offerUrl,
+				copy_code: message.offerCode,
+				expiration_time: message.offerExpiration
+			}
+		})
+	}
+	if (hasOptionalProperty(message, 'optionText') && !!message.optionText) {
+		Object.assign(messageParamsJson, {
+			bottom_sheet: {
+				in_thread_buttons_limit: 1,
+				divider_indices: Array.from({ length: correctedField.length }, (_, index) => index),
+				list_title: message.optionTitle || '📄 Select Options',
+				button_title: message.optionText
+			}
+		})
+	}
+	return {
+		buttons: correctedField.map(button => {
+			const shorthand = button as NativeFlowButtonShorthand
+			const buttonText = shorthand.text || shorthand.buttonText
+			const buttonIcon = shorthand.icon?.toUpperCase()
+			if (hasOptionalProperty(button, 'id') && !!button.id) {
+				return {
+					name: 'quick_reply',
+					buttonParamsJson: JSON.stringify({
+						display_text: buttonText || '👉🏻 Click',
+						id: button.id,
+						icon: buttonIcon
+					})
+				}
+			} else if (hasOptionalProperty(button, 'copy') && !!button.copy) {
+				return {
+					name: 'cta_copy',
+					buttonParamsJson: JSON.stringify({
+						display_text: buttonText || '📋 Copy',
+						copy_code: button.copy,
+						icon: buttonIcon
+					})
+				}
+			} else if (hasOptionalProperty(button, 'url') && !!button.url) {
+				return {
+					name: 'cta_url',
+					buttonParamsJson: JSON.stringify({
+						display_text: buttonText || '🌐 Visit',
+						url: button.url,
+						merchant_url: button.url,
+						webview_interaction: button.useWebview,
+						icon: buttonIcon
+					})
+				}
+			} else if (hasOptionalProperty(button, 'call') && !!button.call) {
+				return {
+					name: 'cta_call',
+					buttonParamsJson: JSON.stringify({
+						display_text: buttonText || '📞 Call',
+						phone_number: button.call,
+						icon: buttonIcon
+					})
+				}
+			} else if (hasOptionalProperty(button, 'sections') && !!button.sections) {
+				return {
+					name: 'single_select',
+					buttonParamsJson: JSON.stringify({
+						title: buttonText || '📋 Select',
+						sections: button.sections,
+						icon: buttonIcon
+					})
+				}
+			}
+			return button as proto.Message.InteractiveMessage.NativeFlowMessage.INativeFlowButton
+		}),
+		messageParamsJson: JSON.stringify(messageParamsJson)
+	}
+}
+
+/** Media types that are valid at the top of an interactiveMessage header. */
+export const hasValidInteractiveHeader = (message: WAMessageContent): boolean => {
+	return !!(
+		message.imageMessage ||
+		message.videoMessage ||
+		message.documentMessage ||
+		message.productMessage ||
+		message.locationMessage
+	)
+}
+
+/**
+ * Determines whether a message needs a biz binary node on the outgoing stanza.
+ * Interactive shapes (buttons/list/template/native-flow) are rejected or
+ * rendered stripped without it.
+ */
+export const shouldIncludeBizBinaryNode = (message: WAMessageContent): boolean => {
+	return !!(
+		message.buttonsMessage ||
+		message.listMessage ||
+		message.templateMessage ||
+		(message.interactiveMessage && message.interactiveMessage.nativeFlowMessage)
+	)
+}
+
 export const generateWAMessageContent = async (
 	message: AnyMessageContent,
 	options: MessageContentGenerationOptions
@@ -573,17 +708,38 @@ export const generateWAMessageContent = async (
 		m.eventMessage.isScheduleCall = message.event.isScheduleCall ?? false
 		m.eventMessage.location = message.event.location
 	} else if (hasNonNullishProperty(message, 'poll')) {
-		message.poll.selectableCount ||= 0
-		message.poll.toAnnouncementGroup ||= false
+		// `selectableOptionsCount` is the proto field name; `selectableCount` is the
+		// historic Baileys name. Accept both, with the proto name winning.
+		const selectableCount = message.poll.selectableOptionsCount ?? message.poll.selectableCount ?? 0
+		const toAnnouncementGroup = message.poll.toAnnouncementGroup ?? false
+		const pollType = message.poll.pollType ?? proto.Message.PollType.POLL
 
 		if (!Array.isArray(message.poll.values)) {
 			throw new Boom('Invalid poll values', { statusCode: 400 })
 		}
 
-		if (message.poll.selectableCount < 0 || message.poll.selectableCount > message.poll.values.length) {
+		if (selectableCount < 0 || selectableCount > message.poll.values.length) {
 			throw new Boom(`poll.selectableCount in poll should be >= 0 and <= ${message.poll.values.length}`, {
 				statusCode: 400
 			})
+		}
+
+		if (pollType === proto.Message.PollType.QUIZ) {
+			if (selectableCount !== 1) {
+				throw new Boom('quiz polls must allow exactly one selection', { statusCode: 400 })
+			}
+
+			if (!message.poll.correctAnswer) {
+				throw new Boom('quiz polls need a correctAnswer', { statusCode: 400 })
+			}
+
+			if (!message.poll.values.includes(message.poll.correctAnswer)) {
+				throw new Boom('quiz correctAnswer must be one of the poll values', { statusCode: 400 })
+			}
+		}
+
+		if (message.poll.endTime !== undefined && message.poll.endTime <= Date.now() / 1000) {
+			throw new Boom('poll endTime must be in the future', { statusCode: 400 })
 		}
 
 		m.messageContextInfo = {
@@ -591,17 +747,22 @@ export const generateWAMessageContent = async (
 			messageSecret: message.poll.messageSecret || randomBytes(32)
 		}
 
-		const pollCreationMessage = {
+		const pollCreationMessage: proto.Message.IPollCreationMessage = {
 			name: message.poll.name,
-			selectableOptionsCount: message.poll.selectableCount,
-			options: message.poll.values.map(optionName => ({ optionName }))
+			selectableOptionsCount: selectableCount,
+			options: message.poll.values.map(optionName => ({ optionName })),
+			pollType,
+			correctAnswer: message.poll.correctAnswer ? { optionName: message.poll.correctAnswer } : undefined,
+			endTime: message.poll.endTime,
+			hideParticipantName: message.poll.hideParticipantName,
+			allowAddOption: message.poll.allowAddOption
 		}
 
-		if (message.poll.toAnnouncementGroup) {
+		if (toAnnouncementGroup) {
 			// poll v2 is for community announcement groups (single select and multiple)
 			m.pollCreationMessageV2 = pollCreationMessage
 		} else {
-			if (message.poll.selectableCount === 1) {
+			if (selectableCount === 1) {
 				//poll v3 is for single select polls
 				m.pollCreationMessageV3 = pollCreationMessage
 			} else {
@@ -609,6 +770,28 @@ export const generateWAMessageContent = async (
 				m.pollCreationMessage = pollCreationMessage
 			}
 		}
+	} else if (hasNonNullishProperty(message, 'pollAddOption')) {
+		// Add one option to an existing poll. The option hash is the same SHA-256
+		// of the option name the vote aggregation uses to match votes to options.
+		if (!message.pollAddOption.option) {
+			throw new Boom('pollAddOption needs an option', { statusCode: 400 })
+		}
+
+		m.pollAddOptionMessage = {
+			pollCreationMessageKey: message.pollAddOption.pollCreationMessageKey,
+			addOption: {
+				optionName: message.pollAddOption.option,
+				optionHash: sha256(Buffer.from(message.pollAddOption.option)).toString()
+			}
+		}
+	} else if (hasNonNullishProperty(message, 'pollUpdateMessage')) {
+		// Manual poll vote update, with a pre-encrypted vote. Voting is usually
+		// handled internally; this is the raw passthrough for callers that
+		// encrypted the vote themselves.
+		m.pollUpdateMessage = message.pollUpdateMessage
+	} else if (hasNonNullishProperty(message, 'pollAddOptionMessage')) {
+		// Raw poll add-option message, with a pre-built option.
+		m.pollAddOptionMessage = message.pollAddOptionMessage
 	} else if (hasNonNullishProperty(message, 'album')) {
 		m.albumMessage = {
 			expectedImageCount: message.album.expectedImageCount,
@@ -631,10 +814,96 @@ export const generateWAMessageContent = async (
 			}
 		}
 	} else {
-		m = await prepareWAMessageMedia(message, options)
+		m = await prepareWAMessageMedia(message as AnyMediaMessageContent, options)
 	}
 
-	if (hasOptionalProperty(message, 'viewOnce') && !!message.viewOnce) {
+	// Interactive messages: native-flow buttons wrap the content built above
+	// (a text body, or a prepared media header). `interactiveButtons` is the
+	// gifted-btns-style alias for `nativeFlow`. This is a second stage, not
+	// another branch of the chain above: `{ text, nativeFlow }` must reach
+	// here, and the text branch above would swallow it first.
+	if ('nativeFlow' in message || 'interactiveButtons' in message) {
+		const flowButtons = message.nativeFlow ?? message.interactiveButtons
+		if (!flowButtons) {
+			throw new Boom('nativeFlow buttons are required', { statusCode: 400 })
+		}
+		const flowMessage = { ...message, nativeFlow: flowButtons }
+		const interactiveMessage: proto.Message.IInteractiveMessage = {
+			nativeFlowMessage: prepareNativeFlowButtons(flowMessage)
+		}
+		if (hasOptionalProperty(message, 'bizJid')) {
+			interactiveMessage.collectionMessage = {
+				bizJid: message.bizJid,
+				id: message.id,
+				messageVersion: 1
+			}
+		} else if (hasOptionalProperty(message, 'shopSurface')) {
+			interactiveMessage.shopStorefrontMessage = {
+				surface: message.shopSurface as unknown as proto.Message.InteractiveMessage.ShopMessage.Surface,
+				id: message.id,
+				messageVersion: 1
+			}
+		}
+		if (hasOptionalProperty(message, 'text')) {
+			interactiveMessage.body = { text: message.text }
+		} else {
+			if (hasOptionalProperty(message, 'caption')) {
+				const isValidHeader = hasValidInteractiveHeader(m)
+				if (!isValidHeader) {
+					throw new Boom('Invalid media type for interactive message header', { statusCode: 400 })
+				}
+				interactiveMessage.header = {
+					title: message.title || '',
+					subtitle: message.subtitle || '',
+					hasMediaAttachment: isValidHeader
+				}
+				interactiveMessage.body = { text: message.caption }
+			}
+			// NOTE: the reference also sets interactiveMessage.jpegThumbnail
+			// from message.thumbnail, but neither proto defines that field on
+			// InteractiveMessage, so it is dropped on encode — omitted here.
+			if (interactiveMessage.header) {
+				Object.assign(interactiveMessage.header, m)
+			}
+		}
+		if (hasOptionalProperty(message, 'audioFooter')) {
+			const { audioMessage } = await prepareWAMessageMedia({ audio: message.audioFooter }, options)
+			interactiveMessage.footer = {
+				audioMessage,
+				hasMediaAttachment: true
+			}
+		} else if (hasOptionalProperty(message, 'footer')) {
+			interactiveMessage.footer = { text: message.footer }
+		}
+		m = { interactiveMessage }
+	}
+
+	// View-once text (and media) in the V2 envelope: the official client sends
+	// viewOnceMessageV2 — or the voice-note-capable viewOnceMessageV2Extension —
+	// with the viewOnce flag on the inner message itself. The old v1 envelope is
+	// kept for plain `viewOnce`, which predates view-once text.
+	if (
+		(hasOptionalProperty(message, 'viewOnceV2') && !!message.viewOnceV2) ||
+		(hasOptionalProperty(message, 'viewOnceV2Extension') && !!message.viewOnceV2Extension)
+	) {
+		if (m.extendedTextMessage) {
+			m.extendedTextMessage.viewOnce = true
+		} else if (m.imageMessage) {
+			m.imageMessage.viewOnce = true
+		} else if (m.videoMessage) {
+			m.videoMessage.viewOnce = true
+		} else if (m.ptvMessage) {
+			m.ptvMessage.viewOnce = true
+		} else if (m.audioMessage) {
+			m.audioMessage.viewOnce = true
+		}
+
+		if (hasOptionalProperty(message, 'viewOnceV2') && !!message.viewOnceV2) {
+			m = { viewOnceMessageV2: { message: m } }
+		} else {
+			m = { viewOnceMessageV2Extension: { message: m } }
+		}
+	} else if (hasOptionalProperty(message, 'viewOnce') && !!message.viewOnce) {
 		m = { viewOnceMessage: { message: m } }
 	}
 
@@ -840,6 +1109,94 @@ export const normalizeMessageContent = (content: WAMessageContent | null | undef
 	}
 }
 
+/**
+ * Whether the outgoing content is view once media (image, video, round video or audio).
+ * WA Web tags these sends with a `<meta view_once="true"/>` stanza node.
+ * Looks through a disappearing message wrapper. View once wrappers around
+ * anything else (e.g. buttons wrapped so they render) don't count.
+ */
+export const isViewOnceMessage = (content: WAMessageContent | null | undefined) => {
+	const inner = content?.ephemeralMessage?.message ?? content
+	const wrapped = (inner?.viewOnceMessage || inner?.viewOnceMessageV2 || inner?.viewOnceMessageV2Extension)?.message
+	return !!(wrapped?.imageMessage || wrapped?.videoMessage || wrapped?.ptvMessage || wrapped?.audioMessage)
+}
+
+
+/**
+ * Media kinds a view once message can carry. `ptv` is a round video; it
+ * decrypts with the video keys, like `video`.
+ */
+export type ViewOnceMediaType = 'image' | 'video' | 'audio' | 'document' | 'ptv'
+
+export type ExtractedViewOnceMedia = {
+	/** the inner media message (imageMessage / videoMessage / ...) */
+	media: DownloadableMessage & Record<string, any>
+	/** media kind, for the download path */
+	mediaType: ViewOnceMediaType
+	/** true when the content arrived inside a view once wrapper, or the inner media itself carries the viewOnce flag */
+	isViewOnce: boolean
+}
+
+const VIEW_ONCE_MEDIA: Record<string, ViewOnceMediaType> = {
+	imageMessage: 'image',
+	videoMessage: 'video',
+	audioMessage: 'audio',
+	documentMessage: 'document',
+	ptvMessage: 'ptv'
+}
+
+/**
+ * Unwrap a message down to view once media, if it carries any.
+ *
+ * Peels disappearing-message wrappers and view once wrappers (V1, V2 and
+ * V2Extension, nested up to 5 deep) plus documentWithCaptionMessage, then
+ * returns the inner media message. Unlike `isViewOnceMessage` — which only
+ * looks one disappearing layer deep and only counts image/video/round-video/
+ * audio, because it drives the `<meta view_once>` tag on sends — this also
+ * counts document view once, and a bare media message carrying the `viewOnce`
+ * flag itself (e.g. a copy restored from a store, where the wrapper was
+ * already stripped).
+ *
+ * Returns undefined when the content holds no media at all.
+ */
+export const extractViewOnceMedia = (content: WAMessageContent | null | undefined): ExtractedViewOnceMedia | undefined => {
+	if (!content) {
+		return undefined
+	}
+
+	// did the content arrive inside a view once wrapper at any depth?
+	const seenWrapper = (node: WAMessageContent | null | undefined, depth = 0): boolean => {
+		if (!node || depth > 5) {
+			return false
+		}
+
+		if (node.viewOnceMessage?.message || node.viewOnceMessageV2?.message || node.viewOnceMessageV2Extension?.message) {
+			return true
+		}
+
+		return seenWrapper(node.ephemeralMessage?.message, depth + 1)
+	}
+
+	const wrapped = seenWrapper(content)
+	const inner = normalizeMessageContent(content)
+	if (!inner) {
+		return undefined
+	}
+
+	const innerType = getContentType(inner)
+	if (!innerType) {
+		return undefined
+	}
+
+	const mediaType = VIEW_ONCE_MEDIA[innerType]
+	if (!mediaType) {
+		return undefined
+	}
+
+	const media = inner[innerType] as ExtractedViewOnceMedia['media']
+	const isViewOnce = wrapped || media?.viewOnce === true
+	return { media, mediaType, isViewOnce }
+}
 /**
  * Extract the true message content from a message
  * Eg. extracts the inner message from a disappearing message/view once message
@@ -1065,6 +1422,55 @@ type DownloadMediaMessageContext = {
 const REUPLOAD_REQUIRED_STATUS = [410, 404]
 
 /**
+ * When a media link's signature expires, in ms: its `oe` query parameter, in hex unix seconds.
+ * Undefined unless the query carries exactly one `oe` and it is plain hex.
+ */
+const mediaLinkExpiry = (link: string) => {
+	let values: string[]
+	try {
+		// a directPath has no host; the base only makes it parseable
+		values = new URL(link, 'https://mmg.whatsapp.net').searchParams.getAll('oe')
+	} catch {
+		return undefined
+	}
+
+	const [oe] = values
+	if (values.length !== 1 || !oe || !/^[0-9a-f]+$/i.test(oe)) {
+		return undefined
+	}
+
+	const expiry = parseInt(oe, 16) * 1000
+	return Number.isSafeInteger(expiry) ? expiry : undefined
+}
+
+/**
+ * Whether a 403 is worth a reupload: the link that failed carries an `oe` that has passed.
+ * A conservative heuristic, not a documented contract: in a sample of 84 history-sync
+ * downloads the media CDN answered 403 for all 34 links whose `oe` had passed and for none
+ * of the 50 whose `oe` had not. It reads the local clock, so a clock that is off moves the line.
+ * The link is the url getHttpStream reports on its error, or else the one
+ * downloadContentFromMessage requests: the directPath when there is one, else the url.
+ */
+const isExpiredLinkError = (error: unknown, message: WAMessage) => {
+	let link: unknown = (error as { data?: { url?: unknown } } | undefined)?.data?.url
+	if (typeof link !== 'string' && !(link instanceof URL)) {
+		const content = extractMessageContent(message.message)
+		const contentType = content ? getContentType(content) : undefined
+		const media = (contentType && content?.[contentType]) as
+			| { url?: string | null; directPath?: string | null }
+			| undefined
+		link = media?.directPath || media?.url
+	}
+
+	if (!link) {
+		return false
+	}
+
+	const expiry = mediaLinkExpiry(link.toString())
+	return expiry !== undefined && expiry <= Date.now()
+}
+
+/**
  * Downloads the given message. Throws an error if it's not a media message
  */
 export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
@@ -1074,11 +1480,12 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 	ctx?: DownloadMediaMessageContext
 ) => {
 	const result = await downloadMsg().catch(async error => {
-		if (
-			ctx &&
-			typeof error?.status === 'number' && // treat errors with status as HTTP failures requiring reupload
-			REUPLOAD_REQUIRED_STATUS.includes(error.status as number)
-		) {
+		// the media download throws a Boom, which carries the HTTP status on output.statusCode, not on status
+		const status = error?.output?.statusCode ?? error?.status
+		const expired =
+			typeof status === 'number' &&
+			(REUPLOAD_REQUIRED_STATUS.includes(status) || (status === 403 && isExpiredLinkError(error, message)))
+		if (ctx && expired) {
 			ctx.logger.info({ key: message.key }, 'sending reupload media request...')
 			// request reupload
 			message = await ctx.reuploadRequest(message)
@@ -1130,6 +1537,54 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 	}
 }
 
+
+/**
+ * Download a view once photo/video/voice note/document/round video.
+ *
+ * This is the one-call path bots need for view once recovery: it unwraps the
+ * message, checks it really is view once media, and downloads it. It closes
+ * two gaps over `downloadMediaMessage` alone:
+ *
+ * - a view once that arrived with a media key but no URL/directPath (the
+ *   sender's device has not served the file yet) is re-requested first via
+ *   `ctx.reuploadRequest` — `downloadMediaMessage` throws before it can
+ *   reupload when there is no URL at all, so without this the media is
+ *   unrecoverable even though the sender could still serve it.
+ * - the view once check itself: `isViewOnceMessage` is the send-path check
+ *   (one disappearing layer, no documents), so recovery uses the wider
+ *   `extractViewOnceMedia` instead.
+ *
+ * Throws a Boom (400) when the message is not view once media, or when it
+ * has no download URL and no `reuploadRequest` was supplied to ask the
+ * sender's device to re-serve it. Expired links are still handled by
+ * `downloadMediaMessage` itself, which reuploads and retries.
+ */
+export const downloadViewOnceMessage = async <Type extends 'buffer' | 'stream'>(
+	message: WAMessage,
+	type: Type,
+	options: MediaDownloadOptions,
+	ctx?: DownloadMediaMessageContext
+) => {
+	const extracted = extractViewOnceMedia(message.message)
+	if (!extracted?.isViewOnce) {
+		throw new Boom('message is not a view once media message', { statusCode: 400, data: message })
+	}
+
+	const { media } = extracted
+	if (!media.url && !media.directPath) {
+		if (!media.mediaKey || !ctx?.reuploadRequest) {
+			throw new Boom(
+				'view once media has no download URL; pass reuploadRequest (sock.updateMediaMessage) to ask the sender to re-serve it',
+				{ statusCode: 400, data: message }
+			)
+		}
+
+		ctx.logger.info({ key: message.key }, 'view once media has no URL, requesting re-upload...')
+		message = await ctx.reuploadRequest(message)
+	}
+
+	return downloadMediaMessage(message, type, options, ctx)
+}
 /** Checks whether the given message is a media message; if it is returns the inner content */
 export const assertMediaContent = (content: proto.IMessage | null | undefined) => {
 	content = extractMessageContent(content)

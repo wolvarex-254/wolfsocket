@@ -1,4 +1,5 @@
 import { Boom } from '@hapi/boom'
+import { randomBytes } from 'crypto'
 import { proto } from '../../WAProto/index.js'
 import type {
 	AuthenticationCreds,
@@ -21,6 +22,7 @@ import { WAMessageStubType } from '../Types'
 import { getContentType, normalizeMessageContent } from '../Utils/messages'
 import {
 	areJidsSameUser,
+	type BinaryNode,
 	isHostedLidUser,
 	isHostedPnUser,
 	isJidBroadcast,
@@ -30,7 +32,7 @@ import {
 	jidEncode,
 	jidNormalizedUser
 } from '../WABinary'
-import { aesDecryptGCM, hmacSign } from './crypto'
+import { aesDecryptGCM, aesEncryptGCM, hmacSign, sha256 } from './crypto'
 import { getKeyAuthor, toNumber } from './generics'
 import { downloadAndProcessHistorySyncNotification } from './history'
 import type { ILogger } from './logger'
@@ -258,6 +260,60 @@ export function decryptPollVote(
 	function toBinary(txt: string) {
 		return Buffer.from(txt)
 	}
+}
+
+/**
+ * Encrypt a poll vote — the exact mirror of {@link decryptPollVote}.
+ * The vote is an AES-256-GCM encryption of a PollVoteMessage whose
+ * selectedOptions are the SHA-256 hashes of the voted option names.
+ * @param vote plaintext vote (SHA-256 hashes of the voted option names)
+ * @param ctx additional info about the poll required for encryption
+ * @returns the encrypted vote ({ encPayload, encIv })
+ */
+export function encryptPollVote(
+	{ selectedOptions }: { selectedOptions: Uint8Array[] },
+	{ pollCreatorJid, pollMsgId, pollEncKey, voterJid }: PollContext
+): proto.Message.IPollEncValue {
+	const sign = Buffer.concat([
+		toBinary(pollMsgId),
+		toBinary(pollCreatorJid),
+		toBinary(voterJid),
+		toBinary('Poll Vote'),
+		new Uint8Array([1])
+	])
+
+	const key0 = hmacSign(pollEncKey, new Uint8Array(32), 'sha256')
+	const encKey = hmacSign(sign, key0, 'sha256')
+	const aad = toBinary(`${pollMsgId}\u0000${voterJid}`)
+
+	const plaintext = proto.Message.PollVoteMessage.encode({ selectedOptions }).finish()
+	const encIv = randomBytes(12)
+	const encPayload = aesEncryptGCM(plaintext, encKey, encIv, aad)
+	return { encPayload, encIv }
+
+	function toBinary(txt: string) {
+		return Buffer.from(txt)
+	}
+}
+
+/**
+ * Build the vote nodes for a channel (newsletter) poll vote. Unlike a
+ * group poll vote, a channel vote is sent UNENCRYPTED: each `<vote>` node
+ * carries the raw SHA-256 hash of the voted option name as its content
+ * — the same hash `encryptPollVote` puts inside the encrypted
+ * PollVoteMessage for group polls, but with no AES-GCM envelope around
+ * it. The caller sends these inside a `<votes>` child of a
+ * `<message type="poll" server_id="<parent poll server id>">` stanza
+ * carrying a `<meta polltype="vote">` child (see `newsletterSendPollVote`).
+ * @param optionNames voted option names, in the order they were picked
+ * @returns one `<vote>` node per option name
+ */
+export function buildNewsletterPollVotes(optionNames: string[]): BinaryNode[] {
+	return optionNames.map(name => ({
+		tag: 'vote',
+		attrs: {},
+		content: sha256(Buffer.from(name))
+	}))
 }
 
 /**
@@ -666,7 +722,17 @@ const processMessage = async (
 
 		switch (message.messageStubType) {
 			case WAMessageStubType.GROUP_PARTICIPANT_CHANGE_NUMBER:
-				participants = message.messageStubParameters.map((a: any) => JSON.parse(a as string)) || []
+				// Params are JSON participant objects (see
+				// handleGroupNotification 'modify'), but a bare JID
+				// param must not kill the event with a JSON.parse
+				// throw — fall back to a bare { id } participant.
+				participants = (message.messageStubParameters || []).map((a: any) => {
+					try {
+						return typeof a === 'string' ? JSON.parse(a) : a
+					} catch {
+						return { id: String(a) }
+					}
+				}) || []
 				emitParticipantsUpdate('modify')
 				break
 			case WAMessageStubType.GROUP_PARTICIPANT_LEAVE:

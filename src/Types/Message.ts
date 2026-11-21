@@ -119,6 +119,13 @@ type ViewOnce = {
 	viewOnce?: boolean
 }
 
+type ViewOnceV2 = {
+	/** send as a view-once message using the V2 envelope (required for view-once text) */
+	viewOnceV2?: boolean
+	/** send as a view-once message using the V2 extension envelope (voice-note-capable variant) */
+	viewOnceV2Extension?: boolean
+}
+
 type Editable = {
 	edit?: WAMessageKey
 }
@@ -130,10 +137,30 @@ type WithDimensions = {
 export type PollMessageOptions = {
 	name: string
 	selectableCount?: number
+	/** alias for `selectableCount`, matching the proto field name; wins if both are given */
+	selectableOptionsCount?: number
 	values: string[]
 	/** 32 byte message secret to encrypt poll selections */
 	messageSecret?: Uint8Array
 	toAnnouncementGroup?: boolean
+	/** 0 = regular poll, 1 = quiz (one correct answer); defaults to 0 */
+	pollType?: proto.Message.PollType
+	/** the correct option for a quiz poll; must be one of `values` */
+	correctAnswer?: string
+	/** unix seconds when the poll closes; must be in the future */
+	endTime?: number
+	/** hide voter names in the results */
+	hideParticipantName?: boolean
+	/** let participants add their own options to the poll */
+	allowAddOption?: boolean
+}
+
+/** Add one option to an existing poll. */
+export type PollAddOptionOptions = {
+	/** key of the poll creation message to add the option to */
+	pollCreationMessageKey: WAMessageKey
+	/** the new option text */
+	option: string
 }
 
 export type EventMessageOptions = {
@@ -244,10 +271,94 @@ export type WASendableProduct = Omit<proto.Message.ProductMessage.IProductSnapsh
 	productImage: WAMediaUpload
 }
 
+export type NativeFlowSection = {
+	/** Section heading shown above its rows. */
+	title?: string
+	rows: {
+		id: string
+		title: string
+		description?: string
+		header?: string
+	}[]
+}
+
+/**
+ * One native-flow button, as authored by the caller.
+ * Shorthand keys map to a native-flow row: `id` -> quick_reply,
+ * `copy` -> cta_copy, `url` -> cta_url, `call` -> cta_call,
+ * `sections` -> single_select. `text`/`buttonText` is the display text,
+ * `icon` is upper-cased automatically, `useWebview` opens a cta_url in a
+ * webview instead of the browser.
+ */
+export type NativeFlowButtonShorthand = {
+	id?: string
+	copy?: string
+	url?: string
+	call?: string
+	sections?: NativeFlowSection[]
+	text?: string
+	buttonText?: string
+	icon?: string
+	useWebview?: boolean
+}
+
+/** An already-shaped native-flow row, passed through untouched. */
+export type NativeFlowButtonRow = {
+	name: string
+	buttonParamsJson: string
+}
+
+export type NativeFlowButton = NativeFlowButtonShorthand | NativeFlowButtonRow
+
 export type AnyRegularMessageContent = (
 	| ({
 			text: string
 			linkPreview?: WAUrlInfo | null
+	  } & Mentionable &
+			Contextable &
+			Editable)
+	| ({
+			/** Native-flow interactive buttons (cta_url, cta_copy, quick_reply, single_select, cta_call). */
+			nativeFlow?: NativeFlowButton[] | { buttons: NativeFlowButton[] }
+			/** Alias for `nativeFlow` (gifted-btns style). */
+			interactiveButtons?: NativeFlowButton[] | { buttons: NativeFlowButton[] }
+			/** Body text of the interactive message. */
+			text?: string
+			/** Caption used as the body when a media header is attached. */
+			caption?: string
+			/** Footer text. */
+			footer?: string
+			/** Header title (media header only). */
+			title?: string
+			/** Header subtitle (media header only). */
+			subtitle?: string
+			/** Audio footer (voice note attached as the footer). */
+			audioFooter?: WAMediaUpload
+			/** Business JID for a collection (catalog) header. */
+			bizJid?: string
+			/** Storefront surface for a shop header. */
+			shopSurface?: string
+			/** Template / collection id. */
+			id?: string
+			/** Limited-time-offer banner text. */
+			offerText?: string
+			offerUrl?: string
+			offerCode?: string
+			offerExpiration?: number
+			/** Bottom-sheet entry point text. */
+			optionText?: string
+			optionTitle?: string
+			/** Media for the interactive header (image / video / document / location / product). `audio` is NOT valid here — it is rejected with a Boom 400. */
+			image?: WAMediaUpload
+			video?: WAMediaUpload
+			document?: WAMediaUpload
+			location?: WALocationMessage
+			product?: WASendableProduct
+			audio?: WAMediaUpload
+			ptt?: boolean
+			seconds?: number
+			jpegThumbnail?: string
+			mimetype?: string
 	  } & Mentionable &
 			Contextable &
 			Editable)
@@ -258,6 +369,18 @@ export type AnyRegularMessageContent = (
 	  } & Mentionable &
 			Contextable &
 			Editable)
+	| {
+			/** Add one option to an existing poll. */
+			pollAddOption: PollAddOptionOptions
+	  }
+	| {
+			/** Raw poll vote update, with a pre-encrypted vote (voting is usually handled internally). */
+			pollUpdateMessage: proto.Message.IPollUpdateMessage
+	  }
+	| {
+			/** Raw poll add-option message, with a pre-built option. */
+			pollAddOptionMessage: proto.Message.IPollAddOptionMessage
+	  }
 	| ({
 			album: AlbumMessageOptions
 	  } & Contextable &
@@ -305,7 +428,8 @@ export type AnyRegularMessageContent = (
 	| SharePhoneNumber
 	| RequestPhoneNumber
 ) &
-	ViewOnce
+	ViewOnce &
+	ViewOnceV2
 
 export type AnyMessageContent =
 	| AnyRegularMessageContent
@@ -339,6 +463,8 @@ export type MessageRelayOptions = MinimalRelayOptions & {
 	/** additional attributes to add to the WA binary node */
 	additionalAttributes?: { [_: string]: string }
 	additionalNodes?: BinaryNode[]
+	/** force-attach the biz binary node (secureMetaServiceLabel) */
+	addBizAttributes?: boolean
 	/** should we use the devices cache, or fetch afresh from the server; default assumed to be "true" */
 	useUserDevicesCache?: boolean
 	/** jid list of participants for status@broadcast */
@@ -369,8 +495,16 @@ export type MessageGenerationOptionsFromContent = MiscMessageGenerationOptions &
 
 export type WAMediaUploadFunction = (
 	encFilePath: string,
-	opts: { fileEncSha256B64: string; mediaType: MediaType; timeoutMs?: number }
-) => Promise<{ mediaUrl: string; directPath: string; meta_hmac?: string; ts?: number; fbid?: number }>
+	opts: { fileEncSha256B64: string; mediaType: MediaType; timeoutMs?: number; newsletter?: boolean }
+) => Promise<{
+	mediaUrl: string | undefined
+	directPath: string
+	meta_hmac?: string
+	ts?: number
+	fbid?: number
+	thumbnailDirectPath?: string
+	thumbnailSha256?: string
+}>
 
 export type MediaGenerationOptions = {
 	logger?: ILogger

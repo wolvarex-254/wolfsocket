@@ -4,7 +4,7 @@ import type { AuthenticationState, SocketConfig, WAVersion } from '../Types'
 import { Browsers } from '../Utils/browser-utils'
 import logger from '../Utils/logger'
 
-const version = [2, 3000, 1043857760]
+const version = [2, 3000, 1054660005]
 
 export const UNAUTHORIZED_CODES = [401, 403, 419]
 
@@ -99,6 +99,7 @@ export const MEDIA_PATH_MAP: { [T in MediaType]?: string } = {
 	image: '/mms/image',
 	video: '/mms/video',
 	document: '/mms/document',
+	'group-history': '/mms/document',
 	audio: '/mms/audio',
 	sticker: '/mms/image',
 	'sticker-pack': '/mms/sticker-pack',
@@ -108,6 +109,18 @@ export const MEDIA_PATH_MAP: { [T in MediaType]?: string } = {
 	'md-app-state': '',
 	'md-msg-hist': '/mms/md-app-state',
 	'biz-cover-photo': '/pps/biz-cover-photo'
+}
+
+export const NEWSLETTER_MEDIA_PATH_MAP: { [T in MediaType]?: string } = {
+	image: '/newsletter/newsletter-image',
+	video: '/newsletter/newsletter-video',
+	document: '/newsletter/newsletter-document',
+	audio: '/newsletter/newsletter-audio',
+	gif: '/newsletter/newsletter-gif',
+	ptt: '/newsletter/newsletter-ptt',
+	ptv: '/newsletter/newsletter-ptv',
+	sticker: '/newsletter/newsletter-sticker-pack',
+	'thumbnail-link': '/newsletter/newsletter-image'
 }
 
 export const MEDIA_HKDF_KEY_MAPPING = {
@@ -127,6 +140,7 @@ export const MEDIA_HKDF_KEY_MAPPING = {
 	'thumbnail-video': 'Video Thumbnail',
 	'thumbnail-link': 'Link Thumbnail',
 	'md-msg-hist': 'History',
+	'group-history': 'Group History',
 	'md-app-state': 'App State',
 	'product-catalog-image': '',
 	'payment-bg-image': 'Payment Background',

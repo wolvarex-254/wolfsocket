@@ -1,3 +1,4 @@
+import { Boom } from '@hapi/boom'
 import { proto } from '../../WAProto/index.js'
 import {
 	type GroupMetadata,
@@ -7,7 +8,7 @@ import {
 	type WAMessageKey,
 	WAMessageStubType
 } from '../Types'
-import { generateMessageID, generateMessageIDV2, unixTimestampSeconds } from '../Utils'
+import { generateMessageID, generateMessageIDV2, makeSyncKeyAutoResolver, unixTimestampSeconds } from '../Utils'
 import logger from '../Utils/logger'
 import {
 	type BinaryNode,
@@ -21,7 +22,21 @@ import { makeBusinessSocket } from './business'
 
 export const makeCommunitiesSocket = (config: SocketConfig) => {
 	const sock = makeBusinessSocket(config)
-	const { authState, ev, query, upsertMessage } = sock
+	const { authState, ev, query, upsertMessage, requestAppStateSyncKey } = sock
+
+	const autoResolveSyncKey = makeSyncKeyAutoResolver({ authState, requestKey: requestAppStateSyncKey })
+
+	ev.on('connection.update', ({ connection }) => {
+		if (connection !== 'open') {
+			return
+		}
+
+		autoResolveSyncKey().then(status => {
+			if (status === 'requested') {
+				logger.info('requested the missing sync value from the phone')
+			}
+		})
+	})
 
 	const communityQuery = async (jid: string, type: 'get' | 'set', content: BinaryNode[]) =>
 		query({
@@ -432,7 +447,15 @@ export const makeCommunitiesSocket = (config: SocketConfig) => {
 }
 
 export const extractCommunityMetadata = (result: BinaryNode) => {
-	const community = getBinaryNodeChild(result, 'community')!
+	const community = getBinaryNodeChild(result, 'community') || getBinaryNodeChild(result, 'group')
+	if (!community) {
+		throw new Boom('Invalid community metadata response: missing <community> or <group> node', { data: result })
+	}
+
+	if (!community.attrs.id) {
+		throw new Boom('Invalid community metadata response: missing community id', { data: community })
+	}
+
 	const descChild = getBinaryNodeChild(community, 'description')
 	let desc: string | undefined
 	let descId: string | undefined
@@ -441,9 +464,7 @@ export const extractCommunityMetadata = (result: BinaryNode) => {
 		descId = descChild.attrs.id
 	}
 
-	const communityId = community.attrs.id?.includes('@')
-		? community.attrs.id
-		: jidEncode(community.attrs.id || '', 'g.us')
+	const communityId = community.attrs.id.includes('@') ? community.attrs.id : jidEncode(community.attrs.id, 'g.us')
 	const eph = getBinaryNodeChild(community, 'ephemeral')?.attrs.expiration
 	const memberAddMode = getBinaryNodeChildString(community, 'member_add_mode') === 'all_member_add'
 	const metadata: GroupMetadata = {

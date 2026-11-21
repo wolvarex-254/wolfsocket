@@ -2,7 +2,347 @@
 
 ## Unreleased
 
+### View once recovery (2026-11-21)
+
+The bot's `.vvsave` command proved that view once media can be recovered
+once the connection uses an Android browser identity — but the unwrap and
+download logic lived in the bot. The fork now carries it, so any bot can
+recover a view once with one call instead of reimplementing the unwrap:
+
+- **`downloadViewOnceMessage(message, type, options, ctx?)`** unwraps a view
+  once message and downloads its media. When the media arrived with a media
+  key but no URL/directPath, it first asks the sender's device to re-serve
+  it via `ctx.reuploadRequest` (`sock.updateMediaMessage`) — previously
+  `downloadMediaMessage` threw before it could reupload when there was no
+  URL at all. Throws a Boom (400) when the message is not view once media,
+  or when it has no URL and no reupload was supplied.
+- **`extractViewOnceMedia(content)`** is the pure unwrap + detect step: it
+  peels disappearing-message and view once wrappers (V1, V2, V2Extension,
+  nested, plus documentWithCaptionMessage) and returns the inner media, its
+  kind (`image` / `video` / `audio` / `document` / `ptv`) and whether it is
+  view once. It also counts document view once and a bare media message
+  carrying the `viewOnce` flag — cases `isViewOnceMessage` (the send-path
+  check, unchanged) does not cover.
+
+Bot-side stays bot-side: the browser identity choice, where the original
+message comes from (store / quoted copy), and where the recovered media is
+sent.
+
+### Contacts: add, edit and remove
+
+The contact controls were in the socket from the start but never listed
+here — they are the ones the bot's contact commands use:
+
+- **`sock.addOrEditContact(jid, contact)`** saves or updates a WhatsApp
+  contact for a JID. `contact` carries the name (`fullName` /
+  `firstName`) and the LID/phone JIDs; the contact is saved in WhatsApp
+  only, not in the phone's address book. Sent as a contact sync patch.
+- **`sock.removeContact(jid)`** removes a WhatsApp contact (a contact
+  sync patch with a null contact).
+
+### Pin safety and poll vote in LID-addressed groups (2026-11-21)
+
+- **Pin safety:** `sock.pinMessage(jid, key, duration?)` now refuses to
+  pin a message that is not in the chat — the message is looked up in
+  the store first, and a missing message (or one that belongs to another
+  chat) is refused instead of sent. Pinning a message that does not exist
+  got an account flagged, so the pin is only sent after the message is
+  found.
+- **Poll vote in LID-addressed groups:** `sock.sendPollVote(...)` now
+  uses the bot's LID as the voter id when the poll is LID-addressed
+  (creator JID, participant or addressing mode is a LID); otherwise it
+  uses the phone JID as before. Receivers decrypt a vote with the voter
+  id from the vote message's key, so the wrong form made the vote
+  undecryptable and it never counted — the send still succeeded, which is
+  how the 2026-11-21 "Alice" poll showed a vote sent but stayed 0/0.
+
+### Poll voting (2026-11-21)
+
+No Baileys had a simple way to vote on a poll — every fork could only send a
+vote that was already encrypted. The fork can now vote by option name:
+
+- **`sock.sendPollVote(jid, pollCreationMessageKey, options, pollInfo)`**
+  encrypts the vote and sends it through the raw `pollUpdateMessage`
+  passthrough. `options` is one option name or a list of them;
+  `pollInfo.messageSecret` is the poll creation message's
+  `messageContextInfo.messageSecret`, and `pollInfo.creatorJid` defaults
+  to the author of the creation key. The fork does not look the creation
+  message up in any store.
+- **`encryptPollVote(vote, ctx)`** (`src/Utils/process-message.ts`) is the
+  exact mirror of `decryptPollVote`: the same two-step HMAC-SHA256 key
+  derivation from the creation message's secret, AES-256-GCM with a random
+  12-byte IV and a 16-byte tag, over a `PollVoteMessage` of SHA-256 option
+  hashes — verified by round-trip tests against `decryptPollVote`.
+- The receive side is unchanged: incoming votes are still not decrypted
+  live (the commented-out block stays as it is).
+
+### Block, report by JID and onWhatsApp (2026-11-21)
+
+The block, report and number-check surface now matches the shape other forks
+expose (verified against the app's own spam report builder, `J9G`):
+
+- **Block:** `sock.updateBlockStatus(jid, 'block' | 'unblock')` already accepted
+  a phone-number JID or a LID (it resolves the other side through the LID
+  mapping); `sock.fetchBlocklist()` returns the blocked JIDs.
+- **Report by JID:** `sock.reportSpam(jid, options?)` reports a contact, group
+  or channel in a single IQ and returns `{ jid, flow, reported, reportId,
+node }` (default flow `overflow_menu_report`). `options.flow` is an alias
+  of `spamFlow`, and `options.source` names the reported member inside a
+  group (the `spam_list` `source` attribute). `options.messages` attaches
+  messages to the report. The message-based `sock.reportSpam(messages,
+options?)` is unchanged.
+- **Flow names:** `SPAM_FLOWS` now covers the app's whole validated flow
+  enum — 36 report flows plus the 13 bare entry-point values — and also
+  exports the PascalCase aliases (`GroupInfoReport`, `OverflowMenuReport`,
+  `MessageMenu`, `ContactInfo`, `ChatInfoReport`, `StatusReport`, …) with
+  the identical wire values.
+- **Report id parsing:** the server's reply is now read from both shapes —
+  `<report id="…"/>` (the app's own parser) and `<report_id>…</report_id>`.
+- **Number check:** `sock.onWhatsApp('1234567890')` checks a single number
+  (or several) and returns `[{ jid, exists }]`.
+
+### Channel status publishing & management (2026-11-21)
+
+Channel statuses can now be published and managed from the socket:
+
+- **Send:** `sock.newsletterSendStatus(jid, content, options?)` posts a text, image, video or audio status to a channel and returns the server id (`newsletterStatusServerId`) to use for reactions and pins. Image/video statuses can be marked as a question (`question: true`) or as AI-generated content (`aiContent: true`); a question can be answered with `interactionType: 'question_response'` plus `parentServerId`.
+- **React:** `sock.newsletterReactStatus(jid, serverId, emoji | null)` reacts to a status, or removes the reaction with `null`.
+- **Revoke:** `sock.newsletterRevokeStatus(jid, statusId)` deletes a published status.
+- **Fetch:** `sock.newsletterFetchStatus(jid, { count, before?, after? })` lists published statuses, paginated by server id.
+
+### Polls: quiz, timed, add-option, vote passthrough (2026-11-21)
+
+Poll creation now covers the newer poll shapes, all verified against the
+app's own proto fields (PollCreationMessage fields 9-11, PollAddOptionMessage
+field 121):
+
+- **Quiz polls:** `poll: { pollType: 1, correctAnswer }` sends a quiz poll
+  (single-select only; the correct answer must be one of the values).
+- **Timed polls:** `poll: { endTime, hideParticipantName, allowAddOption }`
+  sets the closing time (unix seconds, must be in the future), hides voter
+  names, and lets participants add their own options.
+- **Add an option:** `sock.sendMessage(jid, { pollAddOption: { pollCreationMessageKey, option } })`
+  adds one option to an existing poll (the option hash is derived the same way
+  vote aggregation matches options). A raw `pollAddOptionMessage` passes
+  through untouched.
+- **Vote update:** a raw `pollUpdateMessage` (pre-encrypted vote) passes
+  through untouched for callers that encrypted the vote themselves.
+- **Alias:** `selectableOptionsCount` is accepted alongside the historic
+  `selectableCount` (the proto name wins if both are given).
+
+
+### Fresh sessions resolve on their own (2026-11-20)
+
+- **Fixed:** chat actions that need synced state (archive, pin, clear, status audience) now work on a freshly connected session without a manual step.
+
+### Privacy, pins and statuses fixed (2026-11-20)
+
+Several account and chat controls that did not work are now fixed:
+
+- **Privacy settings:** `sock.updatePrivacySettings({ call, status, last, online, profile, groupadd, readreceipts, messages })` changes any combination of the eight settings in one call; each one is sent through its own privacy query and the rest are left alone.
+- **Status audience default:** `sock.updateStatusDistributionMode(mode, userJids?)` sets the default audience for new statuses — contacts, allow list, deny list, or Close Friends (mode 3).
+- **Pin and unpin chats:** `sock.pinChat(jid, pin?)` pins or unpins a chat; `sock.archiveChat(jid, archive, lastMessages)` archives or unarchives it.
+- **Pin and unpin messages:** `sock.pinMessage(jid, key, duration?)` pins a message in a group or 1:1 chat (default 1 day, up to 30 days) and `sock.unpinMessage(jid, key)` removes it.
+- **Personal status:** `sock.sendPersonalStatus(content, options?)` posts a status to `status@broadcast`.
+- **Close Friends status:** `sock.sendCloseFriendsStatus(content, closeFriendJids, options?)` posts a status visible only to the given close friends (close-friends audience marker plus the recipient list).
+- **Status viewing and reactions:** `sock.markStatusViewed(key, participant?)` marks a group or personal status as viewed, and `sock.reactToStatus(jid, key, emoji, statusJidList?)` reacts to a group or personal status.
+
+### Native interactive buttons (2026-11-16)
+
+Baileys can now send real interactive messages with native-flow buttons —
+no third-party plugin needed. The `gifted-btns` npm package (mauricegift)
+was checked as the reference for the mechanism, but its main file is
+heavily obfuscated with an anti-tamper check, so it is NOT installed or run;
+the same capability is implemented natively here, following the proven
+chaeulso/baileys reference implementation.
+
+- **Authoring:** `sock.sendMessage(jid, { text, footer, interactiveButtons: [...] })`
+  or the reference-style `nativeFlow` field (same shape). `interactiveButtons`
+  is an alias for `nativeFlow`.
+- **Button kinds:** `{ id }` quick-reply, `{ copy }` copy-to-clipboard
+  (`cta_copy`), `{ url }` open link (`cta_url`, `useWebview` for an in-app
+  webview), `{ call }` dial (`cta_call`), `{ sections }` option sheet
+  (`single_select`), plus already-shaped `{ name, buttonParamsJson }` rows
+  passed through untouched. `text`/`buttonText` is the display text,
+  `icon` is upper-cased automatically. `offerText` (+ `offerUrl`,
+  `offerCode`, `offerExpiration`) adds a limited-time-offer banner and
+  `optionText` (+ `optionTitle`) a bottom sheet.
+- **Media headers:** `image` / `video` / `document` / `location` /
+  `product` with a `caption` become the interactive header; any other media
+  (e.g. audio) is rejected with `Invalid media type for interactive message
+  header` (Boom 400). `audioFooter` attaches a voice-note footer, `bizJid`
+  / `shopSurface` add collection / storefront headers.
+- **Wire:** `relayMessage` auto-injects the `<biz>` binary node (mixed
+  native-flow v9, first-party-flow v2, `order_details` for
+  `review_and_pay`, product-list for `listMessage`, quality-control
+  always) whenever the message is an interactive shape, unless one is
+  already present; `addBizAttributes` on the relay options forces it
+  (secureMetaServiceLabel). `sendMessage` also adds the `bot` node
+  (`biz_bot: '1'`) for interactive messages in 1:1 chats; groups get only
+  the `biz` node.
+- **API:** `prepareNativeFlowButtons`, `hasValidInteractiveHeader` and
+  `shouldIncludeBizBinaryNode` (Utils), `getBizBinaryNode` (WABinary), and
+  the `NativeFlowButton` / `NativeFlowButtonShorthand` /
+  `NativeFlowButtonRow` / `NativeFlowSection` types.
+
+### Upstream catch-up (WhiskeySockets/Baileys, 2026-11-16)
+
+Caught the fork up with upstream HEAD (bb0a87e) and 20 open upstream PRs.
+Nothing here changes the fork's own features; these are upstream fixes
+ported by hand (the fork is wolfsocket-lineage, so no cherry-pick applies
+cleanly).
+
+- **Media downloads no longer fail on the `a.whatsapp.net` placeholder host**
+  (upstream a5c3ee7 / PR #2900) — some media messages carry a `url` on
+  `a.whatsapp.net`, which does not resolve, while their `directPath` is
+  valid. `extractHost` now returns `undefined` for that host so the
+  download falls back to `mmg.whatsapp.net`.
+- **`WIN32` → `WIN_HYBRID`** in the connection validator (upstream 0af2386).
+- **Poll result snapshot message field 114 → 115** (PR #2887) — WAProto
+  `pollResultSnapshotMessageV3` moved; proto, encoder and Message decoder
+  updated.
+- **WhatsApp Web version bumped to `[2, 3000, 1054660005]`** (PR #2905) —
+  hardcoded fallback only; the bot fetches the live version at connect.
+- **History-sync requests now carry `privacy_sensitive: '1'`** (PR #2853,
+  adapted — the fork routes peer-data operations through `sendPeerMessage`,
+  so the attribute is added there) or the server drops the request
+  silently. `fetchMessageHistory` also normalises `oldestMsgTimestamp`
+  (ms → s).
+- **Pairing-code registration hardened** (PR #2872) — the link-code
+  companion-reg stanza is only processed at the `primary_hello` stage,
+  registration uses a proper nonce buffer, and a successful pairing now
+  sets `registered: true`.
+- **Undecryptable own messages are acked, not retried** (PR #2864) — stops
+  a `<stream:error><ack/>` teardown when the bot cannot decrypt its own
+  message.
+- **Socket close errors now include the close code/reason** (PR #2865).
+- **Presence is only sent when the account name actually changed**
+  (PR #2789) — stops a nameless `<presence/>` marking the account online.
+- **Auth state is written atomically** (PR #2855) — temp file + rename,
+  so a crash mid-write cannot corrupt `creds.json` and lose the session.
+- **Community metadata accepts `<community>` or `<group>`** (PR #2808)
+  with a clear error when neither is present.
+- **Buffered edits no longer clobber the upsert timestamp** (PR #2896).
+- **Message receipts no longer overwrite the send timestamp** (PR #2879) —
+  receipts now arrive as a proper `message-receipt.update` event with
+  receipt/read/played timestamps.
+- **View-once sends carry `<meta view_once="true"/>`** (PR #2837) — covers
+  retry resends too. This fixes *sending* view-once (`.toviewonce`); it
+  does not affect receiving others' view-once (`.vv`).
+- **Retry resends no longer double-encrypt** (PR #2898) — the participant
+  is no longer added to the regular fan-out, and sessions are asserted
+  before the dedicated retry encryption.
+- **Retry requests are charged once per accepted id** (PR #2892) — new
+  `acceptRetryIds` helper; not-from-me retry requests return early.
+- **Sender-key map is set only from keys actually produced** (PR #2891).
+- **Retry counts are restored, never lowered** (PR #2888) — new
+  `restoreRetryCount`; the fallback path no longer deletes the cache key
+  at the limit.
+- **Retry resends use LID-aware addressing** (PR #2856) — new
+  `isOwnDeviceJid` / `buildRetryResendAddressing`; our own device is
+  matched by LID, not just the user part.
+- **Media re-upload works for JSON-persisted messages** (PR #2835) —
+  media-retry keys accept a base64 string as well as a buffer, and an
+  expired link (403 with an expired `oe` signature) or a 404/410 now
+  triggers a re-upload instead of failing.
+- **Channel statuses are acked** (PR #2883, adapted) — a contact's status
+  stanza is now acked via `sendMessageAck` when it carries no newsletter
+  payload, or the server kills the stream ~50 minutes later. Newsletter
+  statuses stay un-acked (the fork's deliberate design). The offline node
+  processor now handles the `status` type.
+- **Newsletter media uploads use the newsletter paths** (PR #2434) —
+  `NEWSLETTER_MEDIA_PATH_MAP` (`/newsletter/newsletter-*`), server
+  thumbnail generation (`server_thumb_gen=1`) and transcoding for
+  video/gif/ptv, and the upload result returns `thumbnailDirectPath` /
+  `thumbnailSha256`; newsletter messages now carry those fields and omit
+  `url` (directPath only).
+
+### Bug Fixes
+
+- **Group history bundles now encrypt with the `group-history` media type** —
+  `sendGroupHistory` encrypted the bundle file as `document` media (HKDF info
+  "WhatsApp Document Keys"), but the official client uses a dedicated
+  `group-history` media type whose HKDF info is literally "Group History"
+  (WhatsApp APK 2.26.45.71, `C14030jh.java` MmsType table). The recipient's
+  phone derives the bundle keys with "Group History", so the bot's file
+  decrypted to garbage, the SHA-256 check failed and the bundle was silently
+  dropped — and the phone only creates the history notice after a successful
+  import, so no notice from the bot ever appeared (the server still acked the
+  send, and WhatsApp Web showed the raw notice). `MEDIA_HKDF_KEY_MAPPING` /
+  `MEDIA_PATH_MAP` gained a `group-history` entry, `hkdfInfoKey` returns the
+  literal "Group History" for it, and `sendGroupHistory` now encrypts and
+  uploads with that type. Nothing else in the bundle changed (Ft1 encoding,
+  bundle/notice proto fields and metadata were already correct).
+
+- **Group member tag / role changes (`modify`) now emit `group-participants.update`** —
+  the `w:g2` `modify` notification (member tag / admin-role change, confirmed
+  as a recognised action in the official app's GroupNotificationHandler —
+  WhatsApp APK 2.26.45.71, `C1S4.java:31035`) was reduced to bare JID strings
+  in `handleGroupNotification`, and `process-message` then `JSON.parse`d each
+  param, which throws on a bare JID — so the `modify` event never fired and
+  the bot's membership-tag handler never ran. `handleGroupNotification` now
+  builds the same full participant objects as promote/demote/add
+  (`{ id, phoneNumber, lid, username, admin }`, JSON-stringified into
+  `messageStubParameters`), and the `CHANGE_NUMBER` case parses defensively
+  (bare JID falls back to `{ id }` instead of throwing). Verified with a
+  synthetic `processMessage` test: bare-JID and JSON-object params both emit
+  `group-participants.update` with action `modify` and the participant
+  attributes intact.
+
 ### Features
+
+- **Member tag (`modify`) now carries the tag text** — `groupParticipantsUpdate`
+  gained an optional 4th `tag` argument: for the `modify` action a non-empty
+  tag is sent as a `tag` attribute on the `<participant>` node
+  (`<modify><participant jid="..." tag="TEXT"/></modify>`), matching the
+  official app's member-tag flow (WhatsApp APK 2.26.45.71: the tag is a
+  free-text label, max 30 chars, stored on the participant record
+  `C13710jB.A04`, read from group metadata via
+  `GroupParticipantsManager.getMemberTag`, and set through the group request
+  layer — `C2JZ.A00` → `C17232wK.A00`, empty text = clear). Omitting the
+  tag sends the bare modify (clear). `GroupParticipant` gained a `tag`
+  field, and `extractGroupMetadata` + `handleGroupNotification` now parse
+  `attrs.tag`, so tags set in the official app show up in group metadata
+  instead of being dropped. The official client only ever sets its OWN tag;
+  setting another member's tag is unproven and left to the live test.
+
+- **Link preview on group statuses** (`sock.sendGroupStatus()`) — a text
+  group status containing a URL now gets the same link preview card
+  (title / description / thumbnail) a regular message would. `sendMessage`
+  already wired `getUrlInfo` into `generateWAMessage`; `sendGroupStatus`
+  did not, so statuses never got a preview. The socket's link-preview
+  config (`linkPreviewImageThumbnailWidth`,
+  `generateHighQualityLinkPreview`, HTTP `options`, `logger`) is now
+  passed through `GroupStatusDeps` and into `generateWAMessageContent`,
+  exactly like `sendMessage`. No new API: `sendGroupStatus(jid, { text:
+  'see https://example.com' })` just works.
+
+
+- **Group history sharing** (`sock.sendGroupHistory()`) — the native
+  `messageHistoryBundle` flow WhatsApp's own client uses when an admin
+  adds a member (last 25–100 messages, E2EE). Reverse-engineered from
+  the WhatsApp Android APK: the history is an encrypted bundle file
+  (Ft1 protobuf of WebMessageInfo entries) uploaded as document media,
+  then a `messageHistoryBundle` message plus a `messageHistoryNotice`
+  record are sent into the group; the receivers' clients download,
+  decrypt and import the bundle. A standalone notice on its own is
+  dropped by the server — the bundle file is the actual history. No
+  public Baileys fork, whatsmeow or other library had implemented this
+  (re-verified Sep 2026); this is the first native implementation.
+
+  ```ts
+  await sock.sendGroupHistory('120363432773315685@g.us', ['109771495633133@lid'], messages)
+  ```
+
+  `messages` are full `proto.IWebMessageInfo` objects (key + content +
+  timestamp). The bundle is encrypted with the document media keys and
+  uploaded to `/mms/document`. Live test 2026-11-13 ~12:4x EAT (VPS,
+  baba hany → tester group, 5 messages to new member
+  109771495633133@lid): **bundle + notice both sent and visible in the
+  group** (bundle 3EB06BAF5CC794022D0095, notice 3EB0254E19B3B9BC0E7BCD,
+  directPath `/v/t62.7119-24/794138976_3019077851787904_904926531635696930`).
+  Whether the new member's client imported the history is pending the
+  user's check on his phone.
 
 - **Delete and clear chat** (`sock.clearChat()`, `sock.deleteChat()`,
   `sock.deleteMessage()`, `sock.deleteMessageForMe()`)
