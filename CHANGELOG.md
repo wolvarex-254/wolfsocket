@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### View once recovery (2026-11-21)
+
+The bot's `.vvsave` command proved that view once media can be recovered
+once the connection uses an Android browser identity — but the unwrap and
+download logic lived in the bot. The fork now carries it, so any bot can
+recover a view once with one call instead of reimplementing the unwrap:
+
+- **`downloadViewOnceMessage(message, type, options, ctx?)`** unwraps a view
+  once message and downloads its media. When the media arrived with a media
+  key but no URL/directPath, it first asks the sender's device to re-serve
+  it via `ctx.reuploadRequest` (`sock.updateMediaMessage`) — previously
+  `downloadMediaMessage` threw before it could reupload when there was no
+  URL at all. Throws a Boom (400) when the message is not view once media,
+  or when it has no URL and no reupload was supplied.
+- **`extractViewOnceMedia(content)`** is the pure unwrap + detect step: it
+  peels disappearing-message and view once wrappers (V1, V2, V2Extension,
+  nested, plus documentWithCaptionMessage) and returns the inner media, its
+  kind (`image` / `video` / `audio` / `document` / `ptv`) and whether it is
+  view once. It also counts document view once and a bare media message
+  carrying the `viewOnce` flag — cases `isViewOnceMessage` (the send-path
+  check, unchanged) does not cover.
+
+Bot-side stays bot-side: the browser identity choice, where the original
+message comes from (store / quoted copy), and where the recovered media is
+sent.
+
 ### Contacts: add, edit and remove
 
 The contact controls were in the socket from the start but never listed

@@ -1121,6 +1121,82 @@ export const isViewOnceMessage = (content: WAMessageContent | null | undefined) 
 	return !!(wrapped?.imageMessage || wrapped?.videoMessage || wrapped?.ptvMessage || wrapped?.audioMessage)
 }
 
+
+/**
+ * Media kinds a view once message can carry. `ptv` is a round video; it
+ * decrypts with the video keys, like `video`.
+ */
+export type ViewOnceMediaType = 'image' | 'video' | 'audio' | 'document' | 'ptv'
+
+export type ExtractedViewOnceMedia = {
+	/** the inner media message (imageMessage / videoMessage / ...) */
+	media: DownloadableMessage & Record<string, any>
+	/** media kind, for the download path */
+	mediaType: ViewOnceMediaType
+	/** true when the content arrived inside a view once wrapper, or the inner media itself carries the viewOnce flag */
+	isViewOnce: boolean
+}
+
+const VIEW_ONCE_MEDIA: Record<string, ViewOnceMediaType> = {
+	imageMessage: 'image',
+	videoMessage: 'video',
+	audioMessage: 'audio',
+	documentMessage: 'document',
+	ptvMessage: 'ptv'
+}
+
+/**
+ * Unwrap a message down to view once media, if it carries any.
+ *
+ * Peels disappearing-message wrappers and view once wrappers (V1, V2 and
+ * V2Extension, nested up to 5 deep) plus documentWithCaptionMessage, then
+ * returns the inner media message. Unlike `isViewOnceMessage` — which only
+ * looks one disappearing layer deep and only counts image/video/round-video/
+ * audio, because it drives the `<meta view_once>` tag on sends — this also
+ * counts document view once, and a bare media message carrying the `viewOnce`
+ * flag itself (e.g. a copy restored from a store, where the wrapper was
+ * already stripped).
+ *
+ * Returns undefined when the content holds no media at all.
+ */
+export const extractViewOnceMedia = (content: WAMessageContent | null | undefined): ExtractedViewOnceMedia | undefined => {
+	if (!content) {
+		return undefined
+	}
+
+	// did the content arrive inside a view once wrapper at any depth?
+	const seenWrapper = (node: WAMessageContent | null | undefined, depth = 0): boolean => {
+		if (!node || depth > 5) {
+			return false
+		}
+
+		if (node.viewOnceMessage?.message || node.viewOnceMessageV2?.message || node.viewOnceMessageV2Extension?.message) {
+			return true
+		}
+
+		return seenWrapper(node.ephemeralMessage?.message, depth + 1)
+	}
+
+	const wrapped = seenWrapper(content)
+	const inner = normalizeMessageContent(content)
+	if (!inner) {
+		return undefined
+	}
+
+	const innerType = getContentType(inner)
+	if (!innerType) {
+		return undefined
+	}
+
+	const mediaType = VIEW_ONCE_MEDIA[innerType]
+	if (!mediaType) {
+		return undefined
+	}
+
+	const media = inner[innerType] as ExtractedViewOnceMedia['media']
+	const isViewOnce = wrapped || media?.viewOnce === true
+	return { media, mediaType, isViewOnce }
+}
 /**
  * Extract the true message content from a message
  * Eg. extracts the inner message from a disappearing message/view once message
@@ -1461,6 +1537,54 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 	}
 }
 
+
+/**
+ * Download a view once photo/video/voice note/document/round video.
+ *
+ * This is the one-call path bots need for view once recovery: it unwraps the
+ * message, checks it really is view once media, and downloads it. It closes
+ * two gaps over `downloadMediaMessage` alone:
+ *
+ * - a view once that arrived with a media key but no URL/directPath (the
+ *   sender's device has not served the file yet) is re-requested first via
+ *   `ctx.reuploadRequest` — `downloadMediaMessage` throws before it can
+ *   reupload when there is no URL at all, so without this the media is
+ *   unrecoverable even though the sender could still serve it.
+ * - the view once check itself: `isViewOnceMessage` is the send-path check
+ *   (one disappearing layer, no documents), so recovery uses the wider
+ *   `extractViewOnceMedia` instead.
+ *
+ * Throws a Boom (400) when the message is not view once media, or when it
+ * has no download URL and no `reuploadRequest` was supplied to ask the
+ * sender's device to re-serve it. Expired links are still handled by
+ * `downloadMediaMessage` itself, which reuploads and retries.
+ */
+export const downloadViewOnceMessage = async <Type extends 'buffer' | 'stream'>(
+	message: WAMessage,
+	type: Type,
+	options: MediaDownloadOptions,
+	ctx?: DownloadMediaMessageContext
+) => {
+	const extracted = extractViewOnceMedia(message.message)
+	if (!extracted?.isViewOnce) {
+		throw new Boom('message is not a view once media message', { statusCode: 400, data: message })
+	}
+
+	const { media } = extracted
+	if (!media.url && !media.directPath) {
+		if (!media.mediaKey || !ctx?.reuploadRequest) {
+			throw new Boom(
+				'view once media has no download URL; pass reuploadRequest (sock.updateMediaMessage) to ask the sender to re-serve it',
+				{ statusCode: 400, data: message }
+			)
+		}
+
+		ctx.logger.info({ key: message.key }, 'view once media has no URL, requesting re-upload...')
+		message = await ctx.reuploadRequest(message)
+	}
+
+	return downloadMediaMessage(message, type, options, ctx)
+}
 /** Checks whether the given message is a media message; if it is returns the inner content */
 export const assertMediaContent = (content: proto.IMessage | null | undefined) => {
 	content = extractMessageContent(content)
