@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.7 - 2026-11-22
+
 ### View once recovery (2026-11-21)
 
 The bot's `.vvsave` command proved that view once media can be recovered
