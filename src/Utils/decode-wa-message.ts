@@ -376,7 +376,10 @@ export const decryptMessageNode = (
 			}
 
 			// if nothing was found to decrypt
-			if (!decryptables && !fullMessage.key?.isViewOnce) {
+			// A phone-sent view-once arrives with only <unavailable type="view_once"/>
+			// and no enc node; without the stub the message stays null and the
+			// placeholder-resend path never runs, so no retry is ever requested.
+			if (!decryptables) {
 				fullMessage.messageStubType = proto.WebMessageInfo.StubType.CIPHERTEXT
 				fullMessage.messageStubParameters = [NO_MESSAGE_FOUND_ERROR_TEXT]
 			}

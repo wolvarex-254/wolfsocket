@@ -240,10 +240,10 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 
 		setTimeout(async () => {
 			if (await placeholderResendCache.get(messageKey?.id!)) {
-				logger.debug({ messageKey }, 'PDO message without response after 8 seconds. Phone possibly offline')
+				logger.debug({ messageKey }, 'PDO message without response after 60 seconds. Phone possibly offline')
 				await placeholderResendCache.del(messageKey?.id!)
 			}
-		}, 8_000)
+		}, 60_000)
 
 		return sendPeerDataOperationMessage(pdoMessage)
 	}
@@ -1773,6 +1773,14 @@ export const makeMessagesRecvSocket = (config: SocketConfig) => {
 							.catch(err => {
 								logger.warn({ err, msgId: msg.key.id }, 'failed to request placeholder resend for unavailable message')
 							})
+						// A PDO resend to the own phone does not answer for view-once, so
+						// also ask the sender to re-encrypt and resend via a retry receipt.
+						// Never for fromMe: a self-retry tears the stream down (see below).
+						if (unavailableType === 'view_once' && !msg.key.fromMe) {
+							sendRetryRequest(node, true).catch(err => {
+								logger.warn({ err, msgId: msg.key.id }, 'failed to send view-once retry request to sender')
+							})
+						}
 						acked = true
 						await sendMessageAck(node)
 						// Don't return — fall through to upsertMessage so the stub is emitted

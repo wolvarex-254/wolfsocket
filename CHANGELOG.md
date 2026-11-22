@@ -28,6 +28,17 @@ Bot-side stays bot-side: the browser identity choice, where the original
 message comes from (store / quoted copy), and where the recovered media is
 sent.
 
+### View-once recovery follow-ups (2026-11-22)
+
+- An unavailable view-once (`<unavailable type="view_once"/>` with no enc
+  node) now gets a CIPHERTEXT stub instead of staying null, so the
+  placeholder-resend path actually runs. The socket also sends the sender
+  a retry receipt (never for own messages) and waits up to 60s for the
+  PDO response instead of 8s. Live-tested: the sender's phone re-delivers
+  the same unavailable stub rather than the content, so recovery still
+  depends on the sender's device serving it — but the request paths now
+  fire instead of staying silent.
+
 ### Contacts: add, edit and remove
 
 The contact controls were in the socket from the start but never listed
