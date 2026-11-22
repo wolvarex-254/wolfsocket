@@ -39,6 +39,13 @@ sent.
   depends on the sender's device serving it — but the request paths now
   fire instead of staying silent.
 
+### Poll votes counted (2026-11-22)
+
+- `sendPollVote` now marks poll-update enc nodes `decrypt-fail=hide`
+  (pins and reactions already had it). Phones drop votes without it, so
+  a vote could be server-acked and never counted — the 2+2 quiz vote
+  that stayed 0/0. From upstream WhiskeySockets PR #2927 (still open).
+
 ### Contacts: add, edit and remove
 
 The contact controls were in the socket from the start but never listed
