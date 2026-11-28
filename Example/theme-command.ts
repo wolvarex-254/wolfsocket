@@ -12,6 +12,8 @@
 //   .wallpaper         set the wallpaper from the attached image, or
 //                      from the image you reply to
 //   .wallpaper reset   back to WhatsApp's default wallpaper
+//   .mute [minutes]    mute this chat (default 60 min)
+//   .unmute            unmute this chat
 //   .theme help        show this list in the chat
 //
 // Colour names: royal-blue, red, emerald, green, pink, purple,
@@ -48,7 +50,9 @@ const HELP = [
 	'.theme list — show the colour schemes',
 	'.theme clear — remove the theme',
 	'.wallpaper — set wallpaper from the attached image or the image you reply to',
-	'.wallpaper reset — back to the default wallpaper'
+	'.wallpaper reset — back to the default wallpaper',
+	'.mute [minutes] — mute this chat (default 60)',
+	'.unmute — unmute this chat'
 ].join('\n')
 
 const normaliseScheme = (name: string) => {
@@ -124,6 +128,16 @@ const main = async () => {
 		await sock.clearChatTheme(jid)
 	}
 
+	const muteChat = async (jid: string, minutes: number) => {
+		const muteEnd = Date.now() + minutes * 60_000
+		await sock.chatModify({ mute: muteEnd }, jid)
+		return muteEnd
+	}
+
+	const unmuteChat = async (jid: string) => {
+		await sock.chatModify({ mute: null }, jid)
+	}
+
 	const handle = async (msg: WAMessage) => {
 		const jid = msg.key.remoteJid
 		if (!jid || (jid !== GROUP_JID && jid !== DM_JID)) {
@@ -154,6 +168,13 @@ const main = async () => {
 			} else if (cmd === '.theme' && arg) {
 				const scheme = await setScheme(jid, arg)
 				await reply(jid, `Colour scheme set to ${scheme}.`)
+			} else if (cmd === '.mute') {
+				const minutes = Number(arg) || 60
+				const muteEnd = await muteChat(jid, minutes)
+				await reply(jid, `Muted for ${minutes} min, until ${new Date(muteEnd).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}.`)
+			} else if (cmd === '.unmute') {
+				await unmuteChat(jid)
+				await reply(jid, 'Unmuted.')
 			} else if (cmd === '.wallpaper' && arg.toLowerCase() === 'reset') {
 				await resetWallpaper(jid)
 				await reply(jid, 'Wallpaper reset to default.')

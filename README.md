@@ -114,6 +114,8 @@ Then in the WolfSocket group (or the DM with the second account):
 .wallpaper            set the wallpaper from the attached photo,
                       or reply to a photo with .wallpaper
 .wallpaper reset      back to the default wallpaper
+.mute [minutes]       mute this chat (default 60)
+.unmute              unmute this chat
 .theme help           show the commands in the chat
 ```
 
@@ -121,6 +123,27 @@ Colour names: royal-blue, red, emerald, green, pink, purple,
 default — or a full id like `Royal-Blue@Tonal`. Only the owner's
 accounts can run commands, and the bot replies in the chat to
 confirm.
+
+### Mute / unmute chats
+
+Mute a group or DM with `chatModify` — a server-side app-state
+patch, so the phone shows the muted bell and stops notifying until
+the mute ends:
+
+```ts
+// mute for one hour (mute is an absolute end timestamp)
+await sock.chatModify({ mute: Date.now() + 60 * 60_000 }, jid)
+// unmute
+await sock.chatModify({ mute: null }, jid)
+```
+
+The socket echoes the change back as `chats.update` with
+`muteEndTime` set (or `null` after unmuting). Live-tested
+2026-11-28: muted the WolfSocket group for 60 minutes, confirmed
+the echo, then unmuted and confirmed `muteEndTime: null`.
+Try it from the chat with the command bot (`.mute [minutes]`,
+`.unmute`), or with `Example/test-mute-group.ts mute [minutes]`
+/ `unmute`.
 
 Download any normal media sent to the group with
 `Example/test-media-download.ts`:

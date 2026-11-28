@@ -70,6 +70,18 @@
   runner reconnected right after), and no session files were touched.
   Note: Baileys warns the Android browser identity is experimental.
 
+## Mute / unmute chats (2026-11-28)
+
+- **Mute** — `chatModify({ mute }, jid)` was already in the
+  library (an app-state patch at index `['mute', jid]`,
+  `regular_high`, apiVersion 2); `mute` is the absolute end
+  timestamp, `null` unmutes. Live-tested: muted the WolfSocket
+  group for 60 minutes and the server echoed `chats.update` with
+  `muteEndTime` set, then unmuted and the echo came back
+  `muteEndTime: null`. `Example/test-mute-group.ts mute [minutes]`
+  / `unmute` runs it from the terminal; the command bot answers
+  `.mute [minutes]` and `.unmute` in the group or DM.
+
 ## Ringtones (in progress)
 
 - **Notification tones** — the protocol only carries *global*
