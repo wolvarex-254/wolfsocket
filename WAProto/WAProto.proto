@@ -2339,6 +2339,49 @@ message Message {
         optional string id = 2;
     }
 
+    message ChatAnimatedWallpaper {
+        optional string animatedWallpaperId = 1;
+        optional float dimLevel = 2;
+    }
+
+    message ChatCustomImageWallpaper {
+        optional string directPath = 1;
+        optional bytes mediaKey = 2;
+        optional bytes fileEncSha256 = 3;
+        optional bytes fileSha256 = 4;
+        optional float dimLevel = 5;
+    }
+
+    message ChatDefaultWallpaper {
+        optional bool isDoodleEnabled = 1;
+    }
+
+    message ChatSolidColorWallpaper {
+        optional fixed32 backgroundLightArgb = 1;
+        optional fixed32 backgroundDarkArgb = 2;
+        optional bool isDoodleEnabled = 3;
+        optional fixed32 doodleLightArgb = 4;
+        optional fixed32 doodleDarkArgb = 5;
+    }
+
+    message ChatStockImageWallpaper {
+        optional string stockImageId = 1;
+        optional float dimLevel = 2;
+    }
+
+    message ChatThemeSetting {
+        optional int64 settingTimestampMs = 1;
+        optional bool clearTheme = 2;
+        optional string colorSchemeId = 3;
+        oneof wallpaper {
+            Message.ChatDefaultWallpaper defaultWallpaper = 10;
+            Message.ChatSolidColorWallpaper solidColor = 11;
+            Message.ChatStockImageWallpaper stockImage = 12;
+            Message.ChatCustomImageWallpaper customImage = 13;
+            Message.ChatAnimatedWallpaper animatedWallpaper = 14;
+        }
+    }
+
     message CloudAPIThreadControlNotification {
         optional CloudAPIThreadControl status = 1;
         optional int64 senderNotificationTimestampMs = 2;
@@ -3342,6 +3385,7 @@ message Message {
         optional bytes aiPsiMetadata = 25;
         optional AIQueryFanout aiQueryFanout = 26;
         optional MemberLabel memberLabel = 27;
+        optional Message.ChatThemeSetting chatThemeSetting = 30;
         enum Type {
             REVOKE = 0;
             EPHEMERAL_SETTING = 3;
@@ -3369,6 +3413,7 @@ message Message {
             AI_PSI_METADATA = 28;
             AI_QUERY_FANOUT = 29;
             GROUP_MEMBER_LABEL_CHANGE = 30;
+            CHAT_THEME_SETTING = 34;
         }
     }
 

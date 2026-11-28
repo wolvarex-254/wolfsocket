@@ -71,6 +71,34 @@ same test with `browser: Browsers.android('Chrome')`. That is what
 made the live test pass: a Mac/Chrome companion only gets stubs, an
 Android one gets the full view-once.
 
+### Chat themes
+
+Change a chat's colour scheme and wallpaper for everyone in a group
+or a DM:
+
+```ts
+// colour scheme, by theme name (normalised to Royal-Blue@Tonal)
+await sock.sendMessage(jid, { chatTheme: { chatThemeId: 'Royal-Blue' } })
+// or the complete colour-scheme id
+await sock.setGroupColorScheme(jid, 'Royal-Blue@Tonal', {
+  scope: 'everyone',
+  allowUnverifiedPartialUpdate: true
+})
+// custom wallpaper from a file, URL or Buffer
+await sock.setGroupWallpaper(jid, './wallpaper.jpg')
+// back to WhatsApp's default wallpaper
+await sock.resetGroupWallpaper(jid)
+// remove the theme entirely
+await sock.clearChatTheme(jid)
+```
+
+The DM equivalents are `setDirectChatWallpaper`,
+`resetDirectChatWallpaper` and `setDirectChatColorScheme`. A
+`scope: 'me'` change is refused — it is a client-local setting with
+no verified protocol operation. A resolved call only confirms the
+stanza was written to the socket; check the phone for the result.
+Test it live with `Example/test-chat-theme.ts`.
+
 Download any normal media sent to the group with
 `Example/test-media-download.ts`:
 

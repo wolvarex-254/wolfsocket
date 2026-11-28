@@ -69,6 +69,46 @@
   state reconnects fine under either identity (the normal Mac/Chrome
   runner reconnected right after), and no session files were touched.
   Note: Baileys warns the Android browser identity is experimental.
+
+## Chat themes
+
+- **Chat themes** — set a chat's colour scheme and/or wallpaper for
+  everyone in a group or a DM, via a `CHAT_THEME_SETTING` protocol
+  message (`proto.Message.ProtocolMessage.Type.CHAT_THEME_SETTING`
+  carrying a `ChatThemeSetting`). wolfsocket's proto had none of these
+  definitions, so they were added to `WAProto/WAProto.proto` (nested
+  `ChatAnimatedWallpaper` / `ChatCustomImageWallpaper` /
+  `ChatDefaultWallpaper` / `ChatSolidColorWallpaper` /
+  `ChatStockImageWallpaper` / `ChatThemeSetting` messages,
+  `ProtocolMessage.chatThemeSetting = 30`, `Type.CHAT_THEME_SETTING =
+  34`) and regenerated with `npm run gen:protobuf`.
+  - `sendMessage(jid, { chatTheme: { chatThemeId: 'Royal-Blue' } })`
+    — a theme name is normalised to the colour-scheme form
+    (`Royal-Blue@Tonal`); `colorSchemeId`, `solidColor` (hex/ARGB),
+    `stockImage`, `animatedWallpaper`, `defaultWallpaper` and
+    `clearTheme` are also supported.
+  - `sock.setGroupWallpaper(jid, image)` / `sock.resetGroupWallpaper(jid)`
+    / `sock.setGroupColorScheme(jid, schemeId)` and the DM equivalents
+    `sock.setDirectChatWallpaper` / `sock.resetDirectChatWallpaper` /
+    `sock.setDirectChatColorScheme`, plus `sock.clearChatTheme(jid)`.
+    Custom wallpapers are encrypted and uploaded with the
+    `chat-wallpaper-image` media type first, then referenced by
+    directPath + mediaKey + hashes. Colour-scheme-only updates need
+    `allowUnverifiedPartialUpdate: true` (whether the existing
+    wallpaper is preserved is unverified). A `scope: 'me'` change is
+    refused — it is a client-local appearance setting with no verified
+    protocol operation. A resolved call only confirms the stanza was
+    written to the socket, not server acceptance.
+  - Live-tested 2026-11-28 ~16:25 EAT on the WolfSocket group and the
+    DM with the second account: group colour scheme
+    `Royal-Blue@Tonal`, group custom wallpaper (uploaded photo), DM
+    colour scheme `Emerald@Tonal` — all three messages written
+    (ids `3EB0300B6C4B486D42B984`, `3EB0CD9B59C90A841D697F`,
+    `3EB028CF6409AD5388DFE9`). **Phone verification still pending**:
+    no echo/system message arrived on the socket in 30s, so Briton
+    has to confirm the theme actually changed on his phone.
+  - Test: `Example/test-chat-theme.ts`; unit tests:
+    `src/__tests__/Utils/chat-theme.test.ts` (11 tests).
 - **`Example/test-media-download.ts`** — normal media download test.
   Same listener pattern, downloads any image/video/audio/document in the
   group with `downloadMediaMessage(msg, 'buffer', {})`. Live-tested

@@ -5885,6 +5885,137 @@ export namespace proto {
             public static getTypeUrl(typeUrlPrefix?: string): string;
         }
 
+        interface IChatAnimatedWallpaper {
+            animatedWallpaperId?: (string|null);
+            dimLevel?: (number|null);
+        }
+
+        class ChatAnimatedWallpaper implements IChatAnimatedWallpaper {
+            constructor(p?: proto.Message.IChatAnimatedWallpaper);
+            public animatedWallpaperId?: (string|null);
+            public dimLevel?: (number|null);
+            public static create(properties?: proto.Message.IChatAnimatedWallpaper): proto.Message.ChatAnimatedWallpaper;
+            public static encode(m: proto.Message.IChatAnimatedWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatAnimatedWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatAnimatedWallpaper;
+            public static toObject(m: proto.Message.ChatAnimatedWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IChatCustomImageWallpaper {
+            directPath?: (string|null);
+            mediaKey?: (Uint8Array|null);
+            fileEncSha256?: (Uint8Array|null);
+            fileSha256?: (Uint8Array|null);
+            dimLevel?: (number|null);
+        }
+
+        class ChatCustomImageWallpaper implements IChatCustomImageWallpaper {
+            constructor(p?: proto.Message.IChatCustomImageWallpaper);
+            public directPath?: (string|null);
+            public mediaKey?: (Uint8Array|null);
+            public fileEncSha256?: (Uint8Array|null);
+            public fileSha256?: (Uint8Array|null);
+            public dimLevel?: (number|null);
+            public static create(properties?: proto.Message.IChatCustomImageWallpaper): proto.Message.ChatCustomImageWallpaper;
+            public static encode(m: proto.Message.IChatCustomImageWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatCustomImageWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatCustomImageWallpaper;
+            public static toObject(m: proto.Message.ChatCustomImageWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IChatDefaultWallpaper {
+            isDoodleEnabled?: (boolean|null);
+        }
+
+        class ChatDefaultWallpaper implements IChatDefaultWallpaper {
+            constructor(p?: proto.Message.IChatDefaultWallpaper);
+            public isDoodleEnabled?: (boolean|null);
+            public static create(properties?: proto.Message.IChatDefaultWallpaper): proto.Message.ChatDefaultWallpaper;
+            public static encode(m: proto.Message.IChatDefaultWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatDefaultWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatDefaultWallpaper;
+            public static toObject(m: proto.Message.ChatDefaultWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IChatSolidColorWallpaper {
+            backgroundLightArgb?: (number|null);
+            backgroundDarkArgb?: (number|null);
+            isDoodleEnabled?: (boolean|null);
+            doodleLightArgb?: (number|null);
+            doodleDarkArgb?: (number|null);
+        }
+
+        class ChatSolidColorWallpaper implements IChatSolidColorWallpaper {
+            constructor(p?: proto.Message.IChatSolidColorWallpaper);
+            public backgroundLightArgb?: (number|null);
+            public backgroundDarkArgb?: (number|null);
+            public isDoodleEnabled?: (boolean|null);
+            public doodleLightArgb?: (number|null);
+            public doodleDarkArgb?: (number|null);
+            public static create(properties?: proto.Message.IChatSolidColorWallpaper): proto.Message.ChatSolidColorWallpaper;
+            public static encode(m: proto.Message.IChatSolidColorWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatSolidColorWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatSolidColorWallpaper;
+            public static toObject(m: proto.Message.ChatSolidColorWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IChatStockImageWallpaper {
+            stockImageId?: (string|null);
+            dimLevel?: (number|null);
+        }
+
+        class ChatStockImageWallpaper implements IChatStockImageWallpaper {
+            constructor(p?: proto.Message.IChatStockImageWallpaper);
+            public stockImageId?: (string|null);
+            public dimLevel?: (number|null);
+            public static create(properties?: proto.Message.IChatStockImageWallpaper): proto.Message.ChatStockImageWallpaper;
+            public static encode(m: proto.Message.IChatStockImageWallpaper, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatStockImageWallpaper;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatStockImageWallpaper;
+            public static toObject(m: proto.Message.ChatStockImageWallpaper, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface IChatThemeSetting {
+            settingTimestampMs?: (number|Long|null);
+            clearTheme?: (boolean|null);
+            colorSchemeId?: (string|null);
+            defaultWallpaper?: (proto.Message.IChatDefaultWallpaper|null);
+            solidColor?: (proto.Message.IChatSolidColorWallpaper|null);
+            stockImage?: (proto.Message.IChatStockImageWallpaper|null);
+            customImage?: (proto.Message.IChatCustomImageWallpaper|null);
+            animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
+        }
+
+        class ChatThemeSetting implements IChatThemeSetting {
+            constructor(p?: proto.Message.IChatThemeSetting);
+            public settingTimestampMs?: (number|Long|null);
+            public clearTheme?: (boolean|null);
+            public colorSchemeId?: (string|null);
+            public defaultWallpaper?: (proto.Message.IChatDefaultWallpaper|null);
+            public solidColor?: (proto.Message.IChatSolidColorWallpaper|null);
+            public stockImage?: (proto.Message.IChatStockImageWallpaper|null);
+            public customImage?: (proto.Message.IChatCustomImageWallpaper|null);
+            public animatedWallpaper?: (proto.Message.IChatAnimatedWallpaper|null);
+            public wallpaper?: ("defaultWallpaper"|"solidColor"|"stockImage"|"customImage"|"animatedWallpaper");
+            public static create(properties?: proto.Message.IChatThemeSetting): proto.Message.ChatThemeSetting;
+            public static encode(m: proto.Message.IChatThemeSetting, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ChatThemeSetting;
+            public static fromObject(d: { [k: string]: any }): proto.Message.ChatThemeSetting;
+            public static toObject(m: proto.Message.ChatThemeSetting, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
         interface ICloudAPIThreadControlNotification {
             status?: (proto.Message.CloudAPIThreadControlNotification.CloudAPIThreadControl|null);
             senderNotificationTimestampMs?: (number|Long|null);
@@ -8604,6 +8735,7 @@ export namespace proto {
             aiPsiMetadata?: (Uint8Array|null);
             aiQueryFanout?: (proto.IAIQueryFanout|null);
             memberLabel?: (proto.IMemberLabel|null);
+            chatThemeSetting?: (proto.Message.IChatThemeSetting|null);
         }
 
         class ProtocolMessage implements IProtocolMessage {
@@ -8632,6 +8764,7 @@ export namespace proto {
             public aiPsiMetadata?: (Uint8Array|null);
             public aiQueryFanout?: (proto.IAIQueryFanout|null);
             public memberLabel?: (proto.IMemberLabel|null);
+            public chatThemeSetting?: (proto.Message.IChatThemeSetting|null);
             public static create(properties?: proto.Message.IProtocolMessage): proto.Message.ProtocolMessage;
             public static encode(m: proto.Message.IProtocolMessage, w?: $protobuf.Writer): $protobuf.Writer;
             public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.Message.ProtocolMessage;
@@ -8669,7 +8802,8 @@ export namespace proto {
                 LIMIT_SHARING = 27,
                 AI_PSI_METADATA = 28,
                 AI_QUERY_FANOUT = 29,
-                GROUP_MEMBER_LABEL_CHANGE = 30
+                GROUP_MEMBER_LABEL_CHANGE = 30,
+                CHAT_THEME_SETTING = 34
             }
         }
 

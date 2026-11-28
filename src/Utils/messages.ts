@@ -615,6 +615,105 @@ export const generateWAMessageContent = async (
 			key: message.delete,
 			type: WAProto.Message.ProtocolMessage.Type.REVOKE
 		}
+	} else if (hasNonNullishProperty(message, 'chatTheme')) {
+		// Chat theme (colour scheme and/or wallpaper), sent as a
+		// CHAT_THEME_SETTING protocol message. `chatThemeId` is a
+		// WhatsApp theme name ('Royal-Blue'); it is normalised to the
+		// colour-scheme form by adding '@Tonal' when it has no '@'.
+		const theme = message.chatTheme || {}
+		const themeSetting: proto.Message.IChatThemeSetting = {
+			settingTimestampMs: theme.settingTimestampMs ?? Date.now()
+		}
+
+		if (theme.clearTheme === true) {
+			themeSetting.clearTheme = true
+		}
+
+		if (theme.colorSchemeId || theme.chatThemeId) {
+			const colorSchemeId =
+				theme.colorSchemeId ||
+				(String(theme.chatThemeId).includes('@') ? theme.chatThemeId : `${theme.chatThemeId}@Tonal`)
+
+			themeSetting.colorSchemeId = String(colorSchemeId)
+		}
+
+		if (theme.defaultWallpaper !== undefined) {
+			const defaultWallpaper =
+				typeof theme.defaultWallpaper === 'boolean'
+					? { isDoodleEnabled: theme.defaultWallpaper }
+					: theme.defaultWallpaper
+
+			themeSetting.defaultWallpaper = proto.Message.ChatDefaultWallpaper.fromObject(defaultWallpaper)
+		}
+
+		if (theme.solidColor !== undefined) {
+			const solidColor = theme.solidColor
+			const hexToArgb = (value: string | number | undefined, fallback: number) => {
+				if (typeof value === 'number') {
+					return value >= 0 && value <= 0xffffff ? (0xff000000 | value) >>> 0 : value >>> 0
+				}
+
+				if (typeof value !== 'string') {
+					return fallback
+				}
+
+				const hex = value.trim().replace(/^#/, '').replace(/^0x/i, '')
+				if (/^[0-9a-f]{6}$/i.test(hex)) {
+					return (0xff000000 | parseInt(hex, 16)) >>> 0
+				}
+
+				if (/^[0-9a-f]{8}$/i.test(hex)) {
+					return parseInt(hex, 16) >>> 0
+				}
+
+				return fallback
+			}
+
+			const solid: proto.Message.IChatSolidColorWallpaper = {
+				backgroundLightArgb: hexToArgb(solidColor.colorLight ?? solidColor.color, 0xffffffff),
+				backgroundDarkArgb: hexToArgb(solidColor.colorDark ?? solidColor.color, 0xff000000),
+				isDoodleEnabled: solidColor.isDoodleEnabled ?? false
+			}
+
+			if (solidColor.doodleColorLight !== undefined) {
+				solid.doodleLightArgb = hexToArgb(solidColor.doodleColorLight, 0)
+			}
+
+			if (solidColor.doodleColorDark !== undefined) {
+				solid.doodleDarkArgb = hexToArgb(solidColor.doodleColorDark, 0)
+			}
+
+			themeSetting.solidColor = proto.Message.ChatSolidColorWallpaper.fromObject(solid)
+		}
+
+		if (theme.stockImage) {
+			const wallpaper = theme.stockImage
+
+			themeSetting.stockImage = proto.Message.ChatStockImageWallpaper.fromObject({
+				stockImageId: wallpaper.stockImageId || wallpaper.id,
+				dimLevel:
+					wallpaper.dimLevel ?? (wallpaper.opacity !== undefined ? wallpaper.opacity / 100 : (theme.dimLevel ?? 0))
+			})
+		}
+
+		if (theme.animatedWallpaper) {
+			const wallpaper = theme.animatedWallpaper
+
+			themeSetting.animatedWallpaper = proto.Message.ChatAnimatedWallpaper.fromObject({
+				animatedWallpaperId: wallpaper.animatedWallpaperId || wallpaper.id,
+				dimLevel:
+					wallpaper.dimLevel ?? (wallpaper.opacity !== undefined ? wallpaper.opacity / 100 : (theme.dimLevel ?? 0))
+			})
+		}
+
+		if (Object.keys(themeSetting).length > 1) {
+			m.protocolMessage = {
+				type: proto.Message.ProtocolMessage.Type.CHAT_THEME_SETTING,
+				chatThemeSetting: proto.Message.ChatThemeSetting.fromObject(themeSetting)
+			}
+		} else {
+			throw new Boom('chatTheme requires a color scheme, wallpaper, or clearTheme setting', { statusCode: 400 })
+		}
 	} else if (hasNonNullishProperty(message, 'forward')) {
 		m = generateForwardMessageContent(message.forward, message.force)
 	} else if (hasNonNullishProperty(message, 'disappearingMessagesInChat')) {

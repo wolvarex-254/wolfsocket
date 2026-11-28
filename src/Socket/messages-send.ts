@@ -18,6 +18,16 @@ import type { SpamReportOptions, SpamReportResult, SpamReportTargetResult } from
 import { SPAM_FLOWS, SPAM_REPORT_REASONS } from '../Types/Report'
 import type { StickerPack } from '../Types/StickerPack'
 import type { SetUsernameOptions, UsernameSource } from '../Types/Username'
+import type { ChatThemeOptions } from '../Utils/chat-theme'
+import {
+	clearChatTheme,
+	resetDirectChatWallpaper,
+	resetGroupWallpaper,
+	setDirectChatColorScheme,
+	setDirectChatWallpaper,
+	setGroupColorScheme,
+	setGroupWallpaper
+} from '../Utils/chat-theme'
 import {
 	aggregateMessageKeysNotFromMe,
 	assertMediaContent,
@@ -1467,6 +1477,13 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		meJid: authState.creds.me?.id
 	}
 
+	const chatThemeDeps = {
+		relayMessage,
+		waUploadToServer,
+		logger,
+		user: authState.creds.me
+	}
+
 	/**
 	 * Delete a message for everyone (revoke) — it is removed for all
 	 * participants. In a group, an admin can delete someone else's message.
@@ -1967,6 +1984,28 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		getLIDForPN: (pn: string) => signalRepository.lidMapping.getLIDForPN(pn),
 		getLIDsForPNs: (pns: string[]) => signalRepository.lidMapping.getLIDsForPNs(pns),
 		sendStickerPack: (jid: string, pack: StickerPack) => sendStickerPack(jid, pack, stickerPackDeps),
+		setGroupWallpaper: (jid: string, image: Buffer | { url: string } | string | null, options: ChatThemeOptions = {}) =>
+			setGroupWallpaper(chatThemeDeps, jid, image, options),
+		resetGroupWallpaper: (jid: string, options: ChatThemeOptions & { isDoodleEnabled?: boolean } = {}) =>
+			resetGroupWallpaper(chatThemeDeps, jid, options),
+		setGroupColorScheme: (
+			jid: string,
+			colorSchemeId: string,
+			options: ChatThemeOptions & { allowUnverifiedPartialUpdate?: boolean } = {}
+		) => setGroupColorScheme(chatThemeDeps, jid, colorSchemeId, options),
+		setDirectChatWallpaper: (
+			jid: string,
+			image: Buffer | { url: string } | string | null,
+			options: ChatThemeOptions = {}
+		) => setDirectChatWallpaper(chatThemeDeps, jid, image, options),
+		resetDirectChatWallpaper: (jid: string, options: ChatThemeOptions & { isDoodleEnabled?: boolean } = {}) =>
+			resetDirectChatWallpaper(chatThemeDeps, jid, options),
+		setDirectChatColorScheme: (
+			jid: string,
+			colorSchemeId: string,
+			options: ChatThemeOptions & { allowUnverifiedPartialUpdate?: boolean } = {}
+		) => setDirectChatColorScheme(chatThemeDeps, jid, colorSchemeId, options),
+		clearChatTheme: (jid: string, options: ChatThemeOptions = {}) => clearChatTheme(chatThemeDeps, jid, options),
 		requestPayment: (jid: string, options: RequestPaymentOptions) => requestPayment(jid, options, paymentDeps),
 		sendPayment: (jid: string, options: SendPaymentOptions) => sendPayment(jid, options, paymentDeps),
 		declinePaymentRequest: (jid: string, key: WAMessageKey) => declinePaymentRequest(jid, key, paymentDeps),

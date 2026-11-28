@@ -447,6 +447,45 @@ export type AnyMessageContent =
 	| {
 			limitSharing: boolean
 	  }
+	| {
+			/** Set a chat theme (colour scheme and/or wallpaper) for a chat. Sent as a CHAT_THEME_SETTING protocol message. */
+			chatTheme: ChatThemeContent
+	  }
+
+/**
+ * A chat theme setting, as sent in a CHAT_THEME_SETTING protocol message.
+ * Either a colour scheme, a wallpaper, or `clearTheme` must be given.
+ * `chatThemeId` is a WhatsApp theme name (e.g. 'Royal-Blue'); it is
+ * normalised to the colour-scheme form by adding '@Tonal' when it has no
+ * '@'. Use `colorSchemeId` when you already have the complete value
+ * (e.g. 'Royal-Blue@Tonal', 'Default-Blue@Minimal').
+ */
+export type ChatThemeContent = {
+	/** complete colour-scheme id, e.g. 'Royal-Blue@Tonal' */
+	colorSchemeId?: string
+	/** WhatsApp theme name, e.g. 'Royal-Blue' — normalised to '<name>@Tonal' */
+	chatThemeId?: string
+	/** remove the chat's theme entirely */
+	clearTheme?: boolean
+	/** WhatsApp's default wallpaper; `true` or `{ isDoodleEnabled }` */
+	defaultWallpaper?: boolean | { isDoodleEnabled?: boolean }
+	/** solid-colour wallpaper; hex strings ('#RRGGBB' / '#AARRGGBB') or ARGB numbers */
+	solidColor?: {
+		color?: string | number
+		colorLight?: string | number
+		colorDark?: string | number
+		doodleColorLight?: string | number
+		doodleColorDark?: string | number
+		isDoodleEnabled?: boolean
+	}
+	/** a stock wallpaper by id, with dim level 0-1 */
+	stockImage?: { stockImageId?: string; id?: string; dimLevel?: number; opacity?: number }
+	/** an animated wallpaper by id, with dim level 0-1 */
+	animatedWallpaper?: { animatedWallpaperId?: string; id?: string; dimLevel?: number; opacity?: number }
+	/** wallpaper dim level 0-1, used when a wallpaper omits its own */
+	dimLevel?: number
+	settingTimestampMs?: number
+}
 
 export type GroupMetadataParticipants = Pick<GroupMetadata, 'participants'>
 
