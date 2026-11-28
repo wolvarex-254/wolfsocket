@@ -38,9 +38,14 @@ describe('sendStickerPack', () => {
 		await expect(sendStickerPack(JID, makePack({ stickers }), deps)).rejects.toThrow('1-60 stickers')
 	})
 
-	it('rejects a pack with no name or publisher', async () => {
-		await expect(sendStickerPack(JID, makePack({ name: '' }), deps)).rejects.toThrow('name and a publisher')
-		await expect(sendStickerPack(JID, makePack({ publisher: '' }), deps)).rejects.toThrow('name and a publisher')
+	it('rejects a pack with no name', async () => {
+		await expect(sendStickerPack(JID, makePack({ name: '' }), deps)).rejects.toThrow('sticker pack needs a name')
+	})
+
+	it('allows a pack with no publisher', async () => {
+		// Publisher is optional — packs may be sent publisher-free.
+		await sendStickerPack(JID, makePack({ publisher: '' }), deps)
+		expect(relayMessage).toHaveBeenCalledTimes(1)
 	})
 
 	it('uploads the ZIP as sticker-pack and the tray icon as thumbnail-sticker-pack, then relays the pack message', async () => {
