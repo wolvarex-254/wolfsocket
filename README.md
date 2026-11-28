@@ -46,6 +46,13 @@ needed, sends one test message, then calls
 npx tsx ./Example/test-group-archive.ts <invite-code | invite-link | group-jid>
 ```
 
+Unarchive the same group with `Example/test-group-unarchive.ts`
+(defaults to the WolfSocket test group, or pass a JID):
+
+```bash
+npx tsx ./Example/test-group-unarchive.ts [group-jid]
+```
+
 ## Native Markdown tables
 
 Send an AI response containing Markdown pipe tables through `markdownTable`. WhatsApp renders each detected table with its native rich-table interface while preserving surrounding prose.

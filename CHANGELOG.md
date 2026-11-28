@@ -21,6 +21,12 @@
   archived for verification on the phone. Live-tested 2026-11-28 on group
   "WolfSocket" (`120363414160399028@g.us`): archive call returned ok and
   the event confirmed `archived: true`.
+- **`Example/test-group-unarchive.ts`** — group unarchive test. Connects
+  with the saved session and calls `sock.archiveChat(jid, false, [])`,
+  waiting for the `chats.update` event confirming `archived: false`.
+  Live-tested 2026-11-28 ~15:33 EAT on the same WolfSocket group: call
+  returned ok and the event confirmed `archived: false`. Group left
+  unarchived.
 - **`qrcode` (+ `@types/qrcode`)** added as devDependencies so the QR
   runner can write the PNG. `yarn.lock` was not regenerated here (no Yarn 4
   on the test machine; install ran with npm) — run `yarn install` to
