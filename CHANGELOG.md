@@ -88,6 +88,16 @@
   tone on the phone, and see what arrives. If the global change
   arrives and the per-chat one doesn't, per-chat tones can't be set
   from any companion.
+  **Outcome 2026-11-28 ~17:02 EAT: two personal-tone changes on the
+  phone produced zero sync traffic to the companion** — no dirty
+  notification, no mutation, live or on reconnect, with trace-level
+  logging on. So the phone does not sync tone changes to companions
+  at all: a companion can neither list the current tones nor set
+  them, and there is no patch shape to copy. The proto + event work
+  above stays in place — if a settings record ever does sync (e.g.
+  after a re-link), wolfsocket will now surface it via
+  `settings.update` — but list/set from the bot is not buildable on
+  this evidence.
 
 ## Chat themes
 

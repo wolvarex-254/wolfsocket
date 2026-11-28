@@ -20,7 +20,7 @@ import makeWASocket, { fetchLatestBaileysVersion, makeCacheableSignalKeyStore, u
 import P from 'pino'
 
 const AUTH_DIR = 'baileys_auth_info'
-const logger = P({ level: 'warn' })
+const logger = P({ level: (process.env.LOG_LEVEL as never) || 'warn' })
 const GROUP_JID = '120363414160399028@g.us'
 const OUT_FILE = `${AUTH_DIR}/test-ringtone-watch.json`
 
