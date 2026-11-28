@@ -113,10 +113,23 @@
     (`getMessageType` returns `media` for theme settings and
     `relayMessage` sets `extraAttrs['mediatype'] = 'chat_theme'`).
     Re-tested ~16:33 EAT with the fix (ids `3EB01F991609A8CD64A93F`,
-    `3EB0AA9E6CAF455DDBFB32`, `3EB0DB822E8DB182078C18`) — phone
-    verification still pending.
-  - Test: `Example/test-chat-theme.ts`; unit tests:
-    `src/__tests__/Utils/chat-theme.test.ts` (11 tests).
+    `3EB0AA9E6CAF455DDBFB32`, `3EB0DB822E8DB182078C18`) — **VERIFIED
+    on the phone 2026-11-28 ~16:39–16:42 EAT**: the group wallpaper
+    shows the uploaded photo, and colour schemes change the bubbles
+    (Red, then Royal-Blue via the command bot). So chat themes work
+    end to end: wallpaper + colour schemes, group + DM.
+  - Test: `Example/test-chat-theme.ts` and
+    `Example/test-chat-theme-color.ts` (colour-scheme-only check);
+    unit tests: `src/__tests__/Utils/chat-theme.test.ts` (11 tests).
+  - `Example/theme-command.ts` — a command bot you run against the
+    saved session: type in the WolfSocket group (or the DM with the
+    second account) `.theme <name>` (royal-blue, red, emerald,
+    green, pink, purple, default, or a full id), `.theme list`,
+    `.theme clear`, `.wallpaper` (with a photo attached or replying
+    to one), `.wallpaper reset`, `.theme help`. Only the owner's
+    accounts can run commands. The bot replies in the chat to
+    confirm. Run with `npx tsx ./Example/theme-command.ts`; the
+    `--selftest` flag sends `.theme list` once after connecting.
 - **`Example/test-media-download.ts`** — normal media download test.
   Same listener pattern, downloads any image/video/audio/document in the
   group with `downloadMediaMessage(msg, 'buffer', {})`. Live-tested

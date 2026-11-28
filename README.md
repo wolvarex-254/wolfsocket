@@ -99,6 +99,29 @@ no verified protocol operation. A resolved call only confirms the
 stanza was written to the socket; check the phone for the result.
 Test it live with `Example/test-chat-theme.ts`.
 
+To try it by typing in the group, run the command bot:
+
+```bash
+npx tsx ./Example/theme-command.ts
+```
+
+Then in the WolfSocket group (or the DM with the second account):
+
+```
+.theme red            set the colour scheme
+.theme list           show the colour schemes
+.theme clear          remove the theme
+.wallpaper            set the wallpaper from the attached photo,
+                      or reply to a photo with .wallpaper
+.wallpaper reset      back to the default wallpaper
+.theme help           show the commands in the chat
+```
+
+Colour names: royal-blue, red, emerald, green, pink, purple,
+default — or a full id like `Royal-Blue@Tonal`. Only the owner's
+accounts can run commands, and the bot replies in the chat to
+confirm.
+
 Download any normal media sent to the group with
 `Example/test-media-download.ts`:
 
