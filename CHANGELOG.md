@@ -52,7 +52,23 @@
   view-once test: on a content-less stub it sends the receipts an
   opening client would (`read`, then `played` via `sock.sendReceipt`)
   and keeps waiting for the content to arrive before downloading.
-  Prepared 2026-11-28, not yet run live.
+  Prepared 2026-11-28, not yet run live (superseded by the Android
+  test below).
+- **`Example/test-view-once-android.ts`** — view-once download test
+  with an Android browser identity (`browser:
+  Browsers.android('Chrome')`, i.e. `["Chrome", "Android", ""]`).
+  Same listener as `test-view-once-download.ts` otherwise. Live-tested
+  2026-11-28 ~16:10 EAT: **PASSED** — the view-once arrived with full
+  content (`imageMessage`, `isViewOnce: true`, URL + directPath +
+  mediaKey) and downloaded as a valid JPEG, 45,476 bytes
+  (`baileys_auth_info/view-once-AC6EAE555A0B7FCFD1B0EA65892508DF.jpg`).
+  The fix came from Casper-Tech-ke/baileys (xspacesocket), whose
+  CHANGELOG says view-once recovery works "once the connection uses an
+  Android browser identity": its extraction helpers are identical to
+  wolfsocket's, only the companion identity differs. The same auth
+  state reconnects fine under either identity (the normal Mac/Chrome
+  runner reconnected right after), and no session files were touched.
+  Note: Baileys warns the Android browser identity is experimental.
 - **`Example/test-media-download.ts`** — normal media download test.
   Same listener pattern, downloads any image/video/audio/document in the
   group with `downloadMediaMessage(msg, 'buffer', {})`. Live-tested

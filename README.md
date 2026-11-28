@@ -65,6 +65,12 @@ Pass `any` instead of a JID to watch all chats. A played-receipt
 variant, `Example/test-view-once-played.ts`, sends `read` + `played`
 receipts on the stub and keeps waiting for the content — same usage.
 
+If view-onces only arrive as empty stubs, connect with an Android
+browser identity instead — `Example/test-view-once-android.ts` is the
+same test with `browser: Browsers.android('Chrome')`. That is what
+made the live test pass: a Mac/Chrome companion only gets stubs, an
+Android one gets the full view-once.
+
 Download any normal media sent to the group with
 `Example/test-media-download.ts`:
 
