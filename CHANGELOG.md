@@ -27,6 +27,31 @@
   Live-tested 2026-11-28 ~15:33 EAT on the same WolfSocket group: call
   returned ok and the event confirmed `archived: false`. Group left
   unarchived.
+- **`Example/test-view-once-download.ts`** — view-once media download
+  test. Connects with the saved session, waits up to 10 minutes for a
+  view-once in the group, then downloads it with
+  `downloadViewOnceMessage(msg, 'buffer', {}, { logger, reuploadRequest:
+  sock.updateMediaMessage })` and saves it under `baileys_auth_info/`.
+  Live test 2026-11-28: **blocked at delivery, `downloadViewOnceMessage`
+  itself never got a message to download.** Three view-onces (two from a
+  second account in the group, one from the linked number itself) all
+  arrived as CIPHERTEXT stubs (`messageStubType: 2`, no content) and
+  neither the PDO placeholder resend nor the retry receipt brought the
+  content back within ~5 minutes each. The library's own comment in
+  `src/Socket/messages-recv.ts` notes a PDO resend to the own phone does
+  not answer for view-once. Retrying a re-delivered same-id message is
+  allowed (an early version of this script wrongly marked the id seen on
+  first sight of the empty stub). Still open: needs a view-once that
+  actually arrives with content, e.g. a 1:1 DM instead of a group.
+- **`Example/test-media-download.ts`** — normal media download test.
+  Same listener pattern, downloads any image/video/audio/document in the
+  group with `downloadMediaMessage(msg, 'buffer', {})`. Live-tested
+  2026-11-28 ~15:52 EAT: **PASSED** — a normal photo from the linked
+  number arrived fully readable (`imageMessage`, URL + directPath +
+  mediaKey) and downloaded as a valid JPEG, 112,896 bytes
+  (`baileys_auth_info/media-AC73ABA7F2EDC393FC629F52E34BF08E.jpg`).
+  This proves group decryption and the media download path work, so the
+  view-once failure above is delivery-specific, not a download bug.
 - **`qrcode` (+ `@types/qrcode`)** added as devDependencies so the QR
   runner can write the PNG. `yarn.lock` was not regenerated here (no Yarn 4
   on the test machine; install ran with npm) — run `yarn install` to

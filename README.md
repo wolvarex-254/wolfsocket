@@ -53,6 +53,21 @@ Unarchive the same group with `Example/test-group-unarchive.ts`
 npx tsx ./Example/test-group-unarchive.ts [group-jid]
 ```
 
+Download a view-once sent to the group with
+`Example/test-view-once-download.ts` (waits up to 10 minutes; send the
+view-once after it is running and don't open it on the phone first):
+
+```bash
+npx tsx ./Example/test-view-once-download.ts [group-jid]
+```
+
+Download any normal media sent to the group with
+`Example/test-media-download.ts`:
+
+```bash
+npx tsx ./Example/test-media-download.ts [group-jid]
+```
+
 ## Native Markdown tables
 
 Send an AI response containing Markdown pipe tables through `markdownTable`. WhatsApp renders each detected table with its native rich-table interface while preserving surrounding prose.
