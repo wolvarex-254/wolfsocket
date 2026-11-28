@@ -70,6 +70,25 @@
   runner reconnected right after), and no session files were touched.
   Note: Baileys warns the Android browser identity is experimental.
 
+## Ringtones (in progress)
+
+- **Notification tones** — the protocol only carries *global*
+  default tones, in `SyncActionValue.SettingsSyncAction`
+  (`defaultNotificationToneId`, `groupDefaultNotificationToneId`,
+  `notificationToneId`, `statusNotificationToneId`). wolfsocket's
+  proto had none of it, so the message was added to
+  `WAProto/WAProto.proto` (`SyncActionValue.settingsSyncAction =
+  78`) and regenerated, and `processSyncAction` now emits
+  `settings.update { setting: 'settingsSync', value }` when one
+  arrives. There is NO per-chat tone field or sync action in
+  wolfsocket, plogme, or Casper's protos — per-chat tones look
+  phone-local (WhatsApp Web in a browser can't set them either).
+  `Example/test-ringtone-watch.ts` watches for settings syncs: run
+  it, then change the global Messages tone and the WolfSocket group
+  tone on the phone, and see what arrives. If the global change
+  arrives and the per-chat one doesn't, per-chat tones can't be set
+  from any companion.
+
 ## Chat themes
 
 - **Chat themes** — set a chat's colour scheme and/or wallpaper for

@@ -145,6 +145,7 @@ export type BaileysEventMap = {
 				setting: 'channelsPersonalisedRecommendation'
 				value: proto.SyncActionValue.IPrivacySettingChannelsPersonalisedRecommendationAction
 		  }
+		| { setting: 'settingsSync'; value: proto.SyncActionValue.ISettingsSyncAction }
 }
 
 export type BufferedEventData = {

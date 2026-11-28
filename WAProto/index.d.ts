@@ -11654,6 +11654,7 @@ export namespace proto {
         newsletterSavedInterestsAction?: (proto.SyncActionValue.INewsletterSavedInterestsAction|null);
         aiThreadRenameAction?: (proto.SyncActionValue.IAiThreadRenameAction|null);
         interactiveMessageAction?: (proto.SyncActionValue.IInteractiveMessageAction|null);
+        settingsSyncAction?: (proto.SyncActionValue.ISettingsSyncAction|null);
     }
 
     class SyncActionValue implements ISyncActionValue {
@@ -11727,6 +11728,7 @@ export namespace proto {
         public newsletterSavedInterestsAction?: (proto.SyncActionValue.INewsletterSavedInterestsAction|null);
         public aiThreadRenameAction?: (proto.SyncActionValue.IAiThreadRenameAction|null);
         public interactiveMessageAction?: (proto.SyncActionValue.IInteractiveMessageAction|null);
+        public settingsSyncAction?: (proto.SyncActionValue.ISettingsSyncAction|null);
         public static create(properties?: proto.ISyncActionValue): proto.SyncActionValue;
         public static encode(m: proto.ISyncActionValue, w?: $protobuf.Writer): $protobuf.Writer;
         public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue;
@@ -12857,6 +12859,159 @@ export namespace proto {
             public static toObject(m: proto.SyncActionValue.RemoveRecentStickerAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
             public toJSON(): { [k: string]: any };
             public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        interface ISettingsSyncAction {
+            startAtLogin?: (boolean|null);
+            minimizeToTray?: (boolean|null);
+            language?: (string|null);
+            replaceTextWithEmoji?: (boolean|null);
+            bannerNotificationDisplayMode?: (proto.SyncActionValue.SettingsSyncAction.DisplayMode|null);
+            unreadCounterBadgeDisplayMode?: (proto.SyncActionValue.SettingsSyncAction.DisplayMode|null);
+            isMessagesNotificationEnabled?: (boolean|null);
+            isCallsNotificationEnabled?: (boolean|null);
+            isReactionsNotificationEnabled?: (boolean|null);
+            isStatusReactionsNotificationEnabled?: (boolean|null);
+            isTextPreviewForNotificationEnabled?: (boolean|null);
+            defaultNotificationToneId?: (number|null);
+            groupDefaultNotificationToneId?: (number|null);
+            appTheme?: (number|null);
+            wallpaperId?: (number|null);
+            isDoodleWallpaperEnabled?: (boolean|null);
+            fontSize?: (number|null);
+            isPhotosAutodownloadEnabled?: (boolean|null);
+            isAudiosAutodownloadEnabled?: (boolean|null);
+            isVideosAutodownloadEnabled?: (boolean|null);
+            isDocumentsAutodownloadEnabled?: (boolean|null);
+            disableLinkPreviews?: (boolean|null);
+            notificationToneId?: (number|null);
+            mediaUploadQuality?: (proto.SyncActionValue.SettingsSyncAction.MediaQualitySetting|null);
+            isSpellCheckEnabled?: (boolean|null);
+            isEnterToSendEnabled?: (boolean|null);
+            isGroupMessageNotificationEnabled?: (boolean|null);
+            isGroupReactionsNotificationEnabled?: (boolean|null);
+            isStatusNotificationEnabled?: (boolean|null);
+            statusNotificationToneId?: (number|null);
+            shouldPlaySoundForCallNotification?: (boolean|null);
+            chatThemeId?: (string|null);
+            colorSchemeId?: (string|null);
+            stockWallpaperImageId?: (string|null);
+            mediaAutoDownloadQuality?: (proto.SyncActionValue.SettingsSyncAction.MediaAutoDownloadQualitySetting|null);
+        }
+
+        class SettingsSyncAction implements ISettingsSyncAction {
+            constructor(p?: proto.SyncActionValue.ISettingsSyncAction);
+            public startAtLogin?: (boolean|null);
+            public minimizeToTray?: (boolean|null);
+            public language?: (string|null);
+            public replaceTextWithEmoji?: (boolean|null);
+            public bannerNotificationDisplayMode?: (proto.SyncActionValue.SettingsSyncAction.DisplayMode|null);
+            public unreadCounterBadgeDisplayMode?: (proto.SyncActionValue.SettingsSyncAction.DisplayMode|null);
+            public isMessagesNotificationEnabled?: (boolean|null);
+            public isCallsNotificationEnabled?: (boolean|null);
+            public isReactionsNotificationEnabled?: (boolean|null);
+            public isStatusReactionsNotificationEnabled?: (boolean|null);
+            public isTextPreviewForNotificationEnabled?: (boolean|null);
+            public defaultNotificationToneId?: (number|null);
+            public groupDefaultNotificationToneId?: (number|null);
+            public appTheme?: (number|null);
+            public wallpaperId?: (number|null);
+            public isDoodleWallpaperEnabled?: (boolean|null);
+            public fontSize?: (number|null);
+            public isPhotosAutodownloadEnabled?: (boolean|null);
+            public isAudiosAutodownloadEnabled?: (boolean|null);
+            public isVideosAutodownloadEnabled?: (boolean|null);
+            public isDocumentsAutodownloadEnabled?: (boolean|null);
+            public disableLinkPreviews?: (boolean|null);
+            public notificationToneId?: (number|null);
+            public mediaUploadQuality?: (proto.SyncActionValue.SettingsSyncAction.MediaQualitySetting|null);
+            public isSpellCheckEnabled?: (boolean|null);
+            public isEnterToSendEnabled?: (boolean|null);
+            public isGroupMessageNotificationEnabled?: (boolean|null);
+            public isGroupReactionsNotificationEnabled?: (boolean|null);
+            public isStatusNotificationEnabled?: (boolean|null);
+            public statusNotificationToneId?: (number|null);
+            public shouldPlaySoundForCallNotification?: (boolean|null);
+            public chatThemeId?: (string|null);
+            public colorSchemeId?: (string|null);
+            public stockWallpaperImageId?: (string|null);
+            public mediaAutoDownloadQuality?: (proto.SyncActionValue.SettingsSyncAction.MediaAutoDownloadQualitySetting|null);
+            public static create(properties?: proto.SyncActionValue.ISettingsSyncAction): proto.SyncActionValue.SettingsSyncAction;
+            public static encode(m: proto.SyncActionValue.ISettingsSyncAction, w?: $protobuf.Writer): $protobuf.Writer;
+            public static decode(r: ($protobuf.Reader|Uint8Array), l?: number): proto.SyncActionValue.SettingsSyncAction;
+            public static fromObject(d: { [k: string]: any }): proto.SyncActionValue.SettingsSyncAction;
+            public static toObject(m: proto.SyncActionValue.SettingsSyncAction, o?: $protobuf.IConversionOptions): { [k: string]: any };
+            public toJSON(): { [k: string]: any };
+            public static getTypeUrl(typeUrlPrefix?: string): string;
+        }
+
+        namespace SettingsSyncAction {
+
+            enum DisplayMode {
+                DISPLAY_MODE_UNKNOWN = 0,
+                ALWAYS = 1,
+                NEVER = 2,
+                ONLY_WHEN_APP_IS_OPEN = 3
+            }
+
+            enum MediaQualitySetting {
+                MEDIA_QUALITY_UNKNOWN = 0,
+                STANDARD = 1,
+                HD = 2
+            }
+
+            enum SettingKey {
+                SETTING_KEY_UNKNOWN = 0,
+                START_AT_LOGIN = 1,
+                MINIMIZE_TO_TRAY = 2,
+                LANGUAGE = 3,
+                REPLACE_TEXT_WITH_EMOJI = 4,
+                BANNER_NOTIFICATION_DISPLAY_MODE = 5,
+                UNREAD_COUNTER_BADGE_DISPLAY_MODE = 6,
+                IS_MESSAGES_NOTIFICATION_ENABLED = 7,
+                IS_CALLS_NOTIFICATION_ENABLED = 8,
+                IS_REACTIONS_NOTIFICATION_ENABLED = 9,
+                IS_STATUS_REACTIONS_NOTIFICATION_ENABLED = 10,
+                IS_TEXT_PREVIEW_FOR_NOTIFICATION_ENABLED = 11,
+                DEFAULT_NOTIFICATION_TONE_ID = 12,
+                GROUP_DEFAULT_NOTIFICATION_TONE_ID = 13,
+                APP_THEME = 14,
+                WALLPAPER_ID = 15,
+                IS_DOODLE_WALLPAPER_ENABLED = 16,
+                FONT_SIZE = 17,
+                IS_PHOTOS_AUTODOWNLOAD_ENABLED = 18,
+                IS_AUDIOS_AUTODOWNLOAD_ENABLED = 19,
+                IS_VIDEOS_AUTODOWNLOAD_ENABLED = 20,
+                IS_DOCUMENTS_AUTODOWNLOAD_ENABLED = 21,
+                DISABLE_LINK_PREVIEWS = 22,
+                NOTIFICATION_TONE_ID = 23,
+                MEDIA_UPLOAD_QUALITY = 24,
+                IS_SPELL_CHECK_ENABLED = 25,
+                IS_ENTER_TO_SEND_ENABLED = 26,
+                IS_GROUP_MESSAGE_NOTIFICATION_ENABLED = 27,
+                IS_GROUP_REACTIONS_NOTIFICATION_ENABLED = 28,
+                IS_STATUS_NOTIFICATION_ENABLED = 29,
+                STATUS_NOTIFICATION_TONE_ID = 30,
+                SHOULD_PLAY_SOUND_FOR_CALL_NOTIFICATION = 31,
+                CHAT_THEME_ID = 32,
+                COLOR_SCHEME_ID = 33,
+                STOCK_WALLPAPER_IMAGE_ID = 34
+            }
+
+            enum SettingPlatform {
+                PLATFORM_UNKNOWN = 0,
+                WEB = 1,
+                HYBRID = 2,
+                WINDOWS = 3,
+                MAC = 4
+            }
+
+            enum MediaAutoDownloadQualitySetting {
+                MEDIA_AUTO_DOWNLOAD_QUALITY_UNKNOWN = 0,
+                MEDIA_AUTO_DOWNLOAD_QUALITY_STANDARD = 1,
+                MEDIA_AUTO_DOWNLOAD_QUALITY_HD = 2,
+                MEDIA_AUTO_DOWNLOAD_QUALITY_AUTO = 3
+            }
         }
 
         interface IStarAction {

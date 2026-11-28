@@ -1009,6 +1009,13 @@ export const processSyncAction = (
 			setting: 'notificationActivitySetting',
 			value: action.notificationActivitySettingAction.notificationActivitySetting
 		})
+	} else if (action?.settingsSyncAction) {
+		// Global settings sync — carries the default notification
+		// tone ids (defaultNotificationToneId,
+		// groupDefaultNotificationToneId, notificationToneId,
+		// statusNotificationToneId). Per-chat tones have no sync
+		// action: they are a phone-local setting.
+		ev.emit('settings.update', { setting: 'settingsSync', value: action.settingsSyncAction })
 	} else if (action?.lidContactAction) {
 		ev.emit('contacts.upsert', [
 			{
