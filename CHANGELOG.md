@@ -37,12 +37,22 @@
   second account in the group, one from the linked number itself) all
   arrived as CIPHERTEXT stubs (`messageStubType: 2`, no content) and
   neither the PDO placeholder resend nor the retry receipt brought the
-  content back within ~5 minutes each. The library's own comment in
-  `src/Socket/messages-recv.ts` notes a PDO resend to the own phone does
-  not answer for view-once. Retrying a re-delivered same-id message is
-  allowed (an early version of this script wrongly marked the id seen on
-  first sight of the empty stub). Still open: needs a view-once that
-  actually arrives with content, e.g. a 1:1 DM instead of a group.
+  content back within ~5 minutes each. A fourth send 2026-11-28 ~16:00
+  EAT, caught live by the listener in `any` mode (watch all chats), did
+  the same: `fromMe` stub, no resend after 2+ minutes. The library's own
+  comment in `src/Socket/messages-recv.ts` notes a PDO resend to the own
+  phone does not answer for view-once. Retrying a re-delivered same-id
+  message is allowed (an early version of this script wrongly marked the
+  id seen on first sight of the empty stub). The script also accepts
+  `any` as its argument to watch all chats. Still open: needs a view-once
+  that actually arrives with content, e.g. a 1:1 DM instead of a group —
+  ruled out 2026-11-28: the only 1:1 is the self-chat
+  (`161031913480224@lid`), where WhatsApp disables view-once.
+- **`Example/test-view-once-played.ts`** — untested variant of the
+  view-once test: on a content-less stub it sends the receipts an
+  opening client would (`read`, then `played` via `sock.sendReceipt`)
+  and keeps waiting for the content to arrive before downloading.
+  Prepared 2026-11-28, not yet run live.
 - **`Example/test-media-download.ts`** — normal media download test.
   Same listener pattern, downloads any image/video/audio/document in the
   group with `downloadMediaMessage(msg, 'buffer', {})`. Live-tested

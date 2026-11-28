@@ -61,6 +61,10 @@ view-once after it is running and don't open it on the phone first):
 npx tsx ./Example/test-view-once-download.ts [group-jid]
 ```
 
+Pass `any` instead of a JID to watch all chats. A played-receipt
+variant, `Example/test-view-once-played.ts`, sends `read` + `played`
+receipts on the stub and keeps waiting for the content — same usage.
+
 Download any normal media sent to the group with
 `Example/test-media-download.ts`:
 

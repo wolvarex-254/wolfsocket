@@ -22,6 +22,7 @@ import P from 'pino'
 const AUTH_DIR = 'baileys_auth_info'
 const logger = P({ level: 'warn' })
 const GROUP_JID = process.argv[2] || '120363414160399028@g.us'
+const WATCH_ALL = GROUP_JID === 'any'
 const WAIT_MS = 10 * 60_000
 
 const extFor = (mediaType: string, mimetype?: string | null) => {
@@ -60,7 +61,7 @@ const main = async () => {
 			}
 		})
 	})
-	console.log(`connected as ${sock.user?.id} — waiting for a view-once in ${GROUP_JID} (up to 10 min)`)
+	console.log(`connected as ${sock.user?.id} — waiting for a view-once in ${WATCH_ALL ? 'any chat' : GROUP_JID} (up to 10 min)`)
 	result.connectedAs = sock.user?.id
 
 	const done = new Promise<void>((resolve, reject) => {
@@ -70,7 +71,7 @@ const main = async () => {
 		const tryDownload = async (msg: WAMessage) => {
 			const id = msg.key.id || ''
 			const extracted = extractViewOnceMedia(msg.message)
-			console.log(`candidate ${id} fromMe=${msg.key.fromMe} participant=${msg.key.participant || ''} stub=${(msg as { messageStubType?: number }).messageStubType ?? ''} keys=${Object.keys(msg.message || {}).join(',')} extracted=${extracted ? `${extracted.mediaType} isViewOnce=${extracted.isViewOnce} hasUrl=${!!extracted.media.url} hasDirectPath=${!!extracted.media.directPath} hasMediaKey=${!!extracted.media.mediaKey}` : 'none'}`)
+			console.log(`candidate ${id} chat=${msg.key.remoteJid} fromMe=${msg.key.fromMe} participant=${msg.key.participant || ''} stub=${(msg as { messageStubType?: number }).messageStubType ?? ''} keys=${Object.keys(msg.message || {}).join(',')} extracted=${extracted ? `${extracted.mediaType} isViewOnce=${extracted.isViewOnce} hasUrl=${!!extracted.media.url} hasDirectPath=${!!extracted.media.directPath} hasMediaKey=${!!extracted.media.mediaKey}` : 'none'}`)
 			// A view-once can first arrive content-less (undecryptable
 			// placeholder) and be re-delivered with the same id once the
 			// sender's device resends it, so only mark an id seen once it
@@ -101,14 +102,14 @@ const main = async () => {
 
 		sock.ev.on('messages.upsert', ({ messages }) => {
 			for (const msg of messages) {
-				if (msg.key.remoteJid === GROUP_JID) void tryDownload(msg)
+				if (WATCH_ALL || msg.key.remoteJid === GROUP_JID) void tryDownload(msg)
 			}
 		})
 		// A view-once that arrives as an unavailable placeholder can be
 		// filled in later via an update — retry then too.
 		sock.ev.on('messages.update', (updates) => {
 			for (const { key, update } of updates) {
-				if (key.remoteJid === GROUP_JID && (update as { message?: WAMessage['message'] }).message) {
+				if ((WATCH_ALL || key.remoteJid === GROUP_JID) && (update as { message?: WAMessage['message'] }).message) {
 					void tryDownload({ key, message: (update as { message: WAMessage['message'] }).message } as WAMessage)
 				}
 			}
