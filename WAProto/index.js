@@ -44802,6 +44802,1005 @@ export const proto = $root.proto = (() => {
             return Chat;
         })();
 
+        Message.ChatAnimatedWallpaper = (function() {
+
+            function ChatAnimatedWallpaper(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatAnimatedWallpaper.prototype.animatedWallpaperId = null;
+            ChatAnimatedWallpaper.prototype.dimLevel = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatAnimatedWallpaper.prototype, "_animatedWallpaperId", {
+                get: $util.oneOfGetter($oneOfFields = ["animatedWallpaperId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatAnimatedWallpaper.prototype, "_dimLevel", {
+                get: $util.oneOfGetter($oneOfFields = ["dimLevel"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatAnimatedWallpaper.create = function create(properties) {
+                return new ChatAnimatedWallpaper(properties);
+            };
+
+            ChatAnimatedWallpaper.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.animatedWallpaperId != null && Object.hasOwnProperty.call(m, "animatedWallpaperId"))
+                    w.uint32(10).string(m.animatedWallpaperId);
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel"))
+                    w.uint32(21).float(m.dimLevel);
+                return w;
+            };
+
+            ChatAnimatedWallpaper.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatAnimatedWallpaper();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.animatedWallpaperId = r.string();
+                            break;
+                        }
+                    case 2: {
+                            m.dimLevel = r.float();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatAnimatedWallpaper.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatAnimatedWallpaper)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatAnimatedWallpaper: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatAnimatedWallpaper();
+                if (d.animatedWallpaperId != null) {
+                    m.animatedWallpaperId = String(d.animatedWallpaperId);
+                }
+                if (d.dimLevel != null) {
+                    m.dimLevel = Number(d.dimLevel);
+                }
+                return m;
+            };
+
+            ChatAnimatedWallpaper.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.animatedWallpaperId != null && Object.hasOwnProperty.call(m, "animatedWallpaperId")) {
+                    d.animatedWallpaperId = m.animatedWallpaperId;
+                    if (o.oneofs)
+                        d._animatedWallpaperId = "animatedWallpaperId";
+                }
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel")) {
+                    d.dimLevel = o.json && !isFinite(m.dimLevel) ? String(m.dimLevel) : m.dimLevel;
+                    if (o.oneofs)
+                        d._dimLevel = "dimLevel";
+                }
+                return d;
+            };
+
+            ChatAnimatedWallpaper.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatAnimatedWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatAnimatedWallpaper";
+            };
+
+            return ChatAnimatedWallpaper;
+        })();
+
+        Message.ChatCustomImageWallpaper = (function() {
+
+            function ChatCustomImageWallpaper(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatCustomImageWallpaper.prototype.directPath = null;
+            ChatCustomImageWallpaper.prototype.mediaKey = null;
+            ChatCustomImageWallpaper.prototype.fileEncSha256 = null;
+            ChatCustomImageWallpaper.prototype.fileSha256 = null;
+            ChatCustomImageWallpaper.prototype.dimLevel = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatCustomImageWallpaper.prototype, "_directPath", {
+                get: $util.oneOfGetter($oneOfFields = ["directPath"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatCustomImageWallpaper.prototype, "_mediaKey", {
+                get: $util.oneOfGetter($oneOfFields = ["mediaKey"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatCustomImageWallpaper.prototype, "_fileEncSha256", {
+                get: $util.oneOfGetter($oneOfFields = ["fileEncSha256"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatCustomImageWallpaper.prototype, "_fileSha256", {
+                get: $util.oneOfGetter($oneOfFields = ["fileSha256"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatCustomImageWallpaper.prototype, "_dimLevel", {
+                get: $util.oneOfGetter($oneOfFields = ["dimLevel"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatCustomImageWallpaper.create = function create(properties) {
+                return new ChatCustomImageWallpaper(properties);
+            };
+
+            ChatCustomImageWallpaper.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.directPath != null && Object.hasOwnProperty.call(m, "directPath"))
+                    w.uint32(10).string(m.directPath);
+                if (m.mediaKey != null && Object.hasOwnProperty.call(m, "mediaKey"))
+                    w.uint32(18).bytes(m.mediaKey);
+                if (m.fileEncSha256 != null && Object.hasOwnProperty.call(m, "fileEncSha256"))
+                    w.uint32(26).bytes(m.fileEncSha256);
+                if (m.fileSha256 != null && Object.hasOwnProperty.call(m, "fileSha256"))
+                    w.uint32(34).bytes(m.fileSha256);
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel"))
+                    w.uint32(45).float(m.dimLevel);
+                return w;
+            };
+
+            ChatCustomImageWallpaper.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatCustomImageWallpaper();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.directPath = r.string();
+                            break;
+                        }
+                    case 2: {
+                            m.mediaKey = r.bytes();
+                            break;
+                        }
+                    case 3: {
+                            m.fileEncSha256 = r.bytes();
+                            break;
+                        }
+                    case 4: {
+                            m.fileSha256 = r.bytes();
+                            break;
+                        }
+                    case 5: {
+                            m.dimLevel = r.float();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatCustomImageWallpaper.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatCustomImageWallpaper)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatCustomImageWallpaper: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatCustomImageWallpaper();
+                if (d.directPath != null) {
+                    m.directPath = String(d.directPath);
+                }
+                if (d.mediaKey != null) {
+                    if (typeof d.mediaKey === "string")
+                        $util.base64.decode(d.mediaKey, m.mediaKey = $util.newBuffer($util.base64.length(d.mediaKey)), 0);
+                    else if (d.mediaKey.length >= 0)
+                        m.mediaKey = d.mediaKey;
+                }
+                if (d.fileEncSha256 != null) {
+                    if (typeof d.fileEncSha256 === "string")
+                        $util.base64.decode(d.fileEncSha256, m.fileEncSha256 = $util.newBuffer($util.base64.length(d.fileEncSha256)), 0);
+                    else if (d.fileEncSha256.length >= 0)
+                        m.fileEncSha256 = d.fileEncSha256;
+                }
+                if (d.fileSha256 != null) {
+                    if (typeof d.fileSha256 === "string")
+                        $util.base64.decode(d.fileSha256, m.fileSha256 = $util.newBuffer($util.base64.length(d.fileSha256)), 0);
+                    else if (d.fileSha256.length >= 0)
+                        m.fileSha256 = d.fileSha256;
+                }
+                if (d.dimLevel != null) {
+                    m.dimLevel = Number(d.dimLevel);
+                }
+                return m;
+            };
+
+            ChatCustomImageWallpaper.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.directPath != null && Object.hasOwnProperty.call(m, "directPath")) {
+                    d.directPath = m.directPath;
+                    if (o.oneofs)
+                        d._directPath = "directPath";
+                }
+                if (m.mediaKey != null && Object.hasOwnProperty.call(m, "mediaKey")) {
+                    d.mediaKey = o.bytes === String ? $util.base64.encode(m.mediaKey, 0, m.mediaKey.length) : o.bytes === Array ? Array.prototype.slice.call(m.mediaKey) : m.mediaKey;
+                    if (o.oneofs)
+                        d._mediaKey = "mediaKey";
+                }
+                if (m.fileEncSha256 != null && Object.hasOwnProperty.call(m, "fileEncSha256")) {
+                    d.fileEncSha256 = o.bytes === String ? $util.base64.encode(m.fileEncSha256, 0, m.fileEncSha256.length) : o.bytes === Array ? Array.prototype.slice.call(m.fileEncSha256) : m.fileEncSha256;
+                    if (o.oneofs)
+                        d._fileEncSha256 = "fileEncSha256";
+                }
+                if (m.fileSha256 != null && Object.hasOwnProperty.call(m, "fileSha256")) {
+                    d.fileSha256 = o.bytes === String ? $util.base64.encode(m.fileSha256, 0, m.fileSha256.length) : o.bytes === Array ? Array.prototype.slice.call(m.fileSha256) : m.fileSha256;
+                    if (o.oneofs)
+                        d._fileSha256 = "fileSha256";
+                }
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel")) {
+                    d.dimLevel = o.json && !isFinite(m.dimLevel) ? String(m.dimLevel) : m.dimLevel;
+                    if (o.oneofs)
+                        d._dimLevel = "dimLevel";
+                }
+                return d;
+            };
+
+            ChatCustomImageWallpaper.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatCustomImageWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatCustomImageWallpaper";
+            };
+
+            return ChatCustomImageWallpaper;
+        })();
+
+        Message.ChatDefaultWallpaper = (function() {
+
+            function ChatDefaultWallpaper(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatDefaultWallpaper.prototype.isDoodleEnabled = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatDefaultWallpaper.prototype, "_isDoodleEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isDoodleEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatDefaultWallpaper.create = function create(properties) {
+                return new ChatDefaultWallpaper(properties);
+            };
+
+            ChatDefaultWallpaper.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.isDoodleEnabled != null && Object.hasOwnProperty.call(m, "isDoodleEnabled"))
+                    w.uint32(8).bool(m.isDoodleEnabled);
+                return w;
+            };
+
+            ChatDefaultWallpaper.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatDefaultWallpaper();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.isDoodleEnabled = r.bool();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatDefaultWallpaper.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatDefaultWallpaper)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatDefaultWallpaper: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatDefaultWallpaper();
+                if (d.isDoodleEnabled != null) {
+                    m.isDoodleEnabled = Boolean(d.isDoodleEnabled);
+                }
+                return m;
+            };
+
+            ChatDefaultWallpaper.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.isDoodleEnabled != null && Object.hasOwnProperty.call(m, "isDoodleEnabled")) {
+                    d.isDoodleEnabled = m.isDoodleEnabled;
+                    if (o.oneofs)
+                        d._isDoodleEnabled = "isDoodleEnabled";
+                }
+                return d;
+            };
+
+            ChatDefaultWallpaper.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatDefaultWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatDefaultWallpaper";
+            };
+
+            return ChatDefaultWallpaper;
+        })();
+
+        Message.ChatSolidColorWallpaper = (function() {
+
+            function ChatSolidColorWallpaper(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatSolidColorWallpaper.prototype.backgroundLightArgb = null;
+            ChatSolidColorWallpaper.prototype.backgroundDarkArgb = null;
+            ChatSolidColorWallpaper.prototype.isDoodleEnabled = null;
+            ChatSolidColorWallpaper.prototype.doodleLightArgb = null;
+            ChatSolidColorWallpaper.prototype.doodleDarkArgb = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_backgroundLightArgb", {
+                get: $util.oneOfGetter($oneOfFields = ["backgroundLightArgb"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_backgroundDarkArgb", {
+                get: $util.oneOfGetter($oneOfFields = ["backgroundDarkArgb"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_isDoodleEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isDoodleEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_doodleLightArgb", {
+                get: $util.oneOfGetter($oneOfFields = ["doodleLightArgb"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatSolidColorWallpaper.prototype, "_doodleDarkArgb", {
+                get: $util.oneOfGetter($oneOfFields = ["doodleDarkArgb"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatSolidColorWallpaper.create = function create(properties) {
+                return new ChatSolidColorWallpaper(properties);
+            };
+
+            ChatSolidColorWallpaper.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.backgroundLightArgb != null && Object.hasOwnProperty.call(m, "backgroundLightArgb"))
+                    w.uint32(13).fixed32(m.backgroundLightArgb);
+                if (m.backgroundDarkArgb != null && Object.hasOwnProperty.call(m, "backgroundDarkArgb"))
+                    w.uint32(21).fixed32(m.backgroundDarkArgb);
+                if (m.isDoodleEnabled != null && Object.hasOwnProperty.call(m, "isDoodleEnabled"))
+                    w.uint32(24).bool(m.isDoodleEnabled);
+                if (m.doodleLightArgb != null && Object.hasOwnProperty.call(m, "doodleLightArgb"))
+                    w.uint32(37).fixed32(m.doodleLightArgb);
+                if (m.doodleDarkArgb != null && Object.hasOwnProperty.call(m, "doodleDarkArgb"))
+                    w.uint32(45).fixed32(m.doodleDarkArgb);
+                return w;
+            };
+
+            ChatSolidColorWallpaper.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatSolidColorWallpaper();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.backgroundLightArgb = r.fixed32();
+                            break;
+                        }
+                    case 2: {
+                            m.backgroundDarkArgb = r.fixed32();
+                            break;
+                        }
+                    case 3: {
+                            m.isDoodleEnabled = r.bool();
+                            break;
+                        }
+                    case 4: {
+                            m.doodleLightArgb = r.fixed32();
+                            break;
+                        }
+                    case 5: {
+                            m.doodleDarkArgb = r.fixed32();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatSolidColorWallpaper.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatSolidColorWallpaper)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatSolidColorWallpaper: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatSolidColorWallpaper();
+                if (d.backgroundLightArgb != null) {
+                    m.backgroundLightArgb = d.backgroundLightArgb >>> 0;
+                }
+                if (d.backgroundDarkArgb != null) {
+                    m.backgroundDarkArgb = d.backgroundDarkArgb >>> 0;
+                }
+                if (d.isDoodleEnabled != null) {
+                    m.isDoodleEnabled = Boolean(d.isDoodleEnabled);
+                }
+                if (d.doodleLightArgb != null) {
+                    m.doodleLightArgb = d.doodleLightArgb >>> 0;
+                }
+                if (d.doodleDarkArgb != null) {
+                    m.doodleDarkArgb = d.doodleDarkArgb >>> 0;
+                }
+                return m;
+            };
+
+            ChatSolidColorWallpaper.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.backgroundLightArgb != null && Object.hasOwnProperty.call(m, "backgroundLightArgb")) {
+                    d.backgroundLightArgb = m.backgroundLightArgb;
+                    if (o.oneofs)
+                        d._backgroundLightArgb = "backgroundLightArgb";
+                }
+                if (m.backgroundDarkArgb != null && Object.hasOwnProperty.call(m, "backgroundDarkArgb")) {
+                    d.backgroundDarkArgb = m.backgroundDarkArgb;
+                    if (o.oneofs)
+                        d._backgroundDarkArgb = "backgroundDarkArgb";
+                }
+                if (m.isDoodleEnabled != null && Object.hasOwnProperty.call(m, "isDoodleEnabled")) {
+                    d.isDoodleEnabled = m.isDoodleEnabled;
+                    if (o.oneofs)
+                        d._isDoodleEnabled = "isDoodleEnabled";
+                }
+                if (m.doodleLightArgb != null && Object.hasOwnProperty.call(m, "doodleLightArgb")) {
+                    d.doodleLightArgb = m.doodleLightArgb;
+                    if (o.oneofs)
+                        d._doodleLightArgb = "doodleLightArgb";
+                }
+                if (m.doodleDarkArgb != null && Object.hasOwnProperty.call(m, "doodleDarkArgb")) {
+                    d.doodleDarkArgb = m.doodleDarkArgb;
+                    if (o.oneofs)
+                        d._doodleDarkArgb = "doodleDarkArgb";
+                }
+                return d;
+            };
+
+            ChatSolidColorWallpaper.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatSolidColorWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatSolidColorWallpaper";
+            };
+
+            return ChatSolidColorWallpaper;
+        })();
+
+        Message.ChatStockImageWallpaper = (function() {
+
+            function ChatStockImageWallpaper(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatStockImageWallpaper.prototype.stockImageId = null;
+            ChatStockImageWallpaper.prototype.dimLevel = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatStockImageWallpaper.prototype, "_stockImageId", {
+                get: $util.oneOfGetter($oneOfFields = ["stockImageId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatStockImageWallpaper.prototype, "_dimLevel", {
+                get: $util.oneOfGetter($oneOfFields = ["dimLevel"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatStockImageWallpaper.create = function create(properties) {
+                return new ChatStockImageWallpaper(properties);
+            };
+
+            ChatStockImageWallpaper.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.stockImageId != null && Object.hasOwnProperty.call(m, "stockImageId"))
+                    w.uint32(10).string(m.stockImageId);
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel"))
+                    w.uint32(21).float(m.dimLevel);
+                return w;
+            };
+
+            ChatStockImageWallpaper.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatStockImageWallpaper();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.stockImageId = r.string();
+                            break;
+                        }
+                    case 2: {
+                            m.dimLevel = r.float();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatStockImageWallpaper.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatStockImageWallpaper)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatStockImageWallpaper: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatStockImageWallpaper();
+                if (d.stockImageId != null) {
+                    m.stockImageId = String(d.stockImageId);
+                }
+                if (d.dimLevel != null) {
+                    m.dimLevel = Number(d.dimLevel);
+                }
+                return m;
+            };
+
+            ChatStockImageWallpaper.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.stockImageId != null && Object.hasOwnProperty.call(m, "stockImageId")) {
+                    d.stockImageId = m.stockImageId;
+                    if (o.oneofs)
+                        d._stockImageId = "stockImageId";
+                }
+                if (m.dimLevel != null && Object.hasOwnProperty.call(m, "dimLevel")) {
+                    d.dimLevel = o.json && !isFinite(m.dimLevel) ? String(m.dimLevel) : m.dimLevel;
+                    if (o.oneofs)
+                        d._dimLevel = "dimLevel";
+                }
+                return d;
+            };
+
+            ChatStockImageWallpaper.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatStockImageWallpaper.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatStockImageWallpaper";
+            };
+
+            return ChatStockImageWallpaper;
+        })();
+
+        Message.ChatThemeSetting = (function() {
+
+            function ChatThemeSetting(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            ChatThemeSetting.prototype.settingTimestampMs = null;
+            ChatThemeSetting.prototype.clearTheme = null;
+            ChatThemeSetting.prototype.colorSchemeId = null;
+            ChatThemeSetting.prototype.defaultWallpaper = null;
+            ChatThemeSetting.prototype.solidColor = null;
+            ChatThemeSetting.prototype.stockImage = null;
+            ChatThemeSetting.prototype.customImage = null;
+            ChatThemeSetting.prototype.animatedWallpaper = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatThemeSetting.prototype, "_settingTimestampMs", {
+                get: $util.oneOfGetter($oneOfFields = ["settingTimestampMs"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatThemeSetting.prototype, "_clearTheme", {
+                get: $util.oneOfGetter($oneOfFields = ["clearTheme"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ChatThemeSetting.prototype, "_colorSchemeId", {
+                get: $util.oneOfGetter($oneOfFields = ["colorSchemeId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            Object.defineProperty(ChatThemeSetting.prototype, "wallpaper", {
+                get: $util.oneOfGetter($oneOfFields = ["defaultWallpaper", "solidColor", "stockImage", "customImage", "animatedWallpaper"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            ChatThemeSetting.create = function create(properties) {
+                return new ChatThemeSetting(properties);
+            };
+
+            ChatThemeSetting.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.settingTimestampMs != null && Object.hasOwnProperty.call(m, "settingTimestampMs"))
+                    w.uint32(8).int64(m.settingTimestampMs);
+                if (m.clearTheme != null && Object.hasOwnProperty.call(m, "clearTheme"))
+                    w.uint32(16).bool(m.clearTheme);
+                if (m.colorSchemeId != null && Object.hasOwnProperty.call(m, "colorSchemeId"))
+                    w.uint32(26).string(m.colorSchemeId);
+                if (m.defaultWallpaper != null && Object.hasOwnProperty.call(m, "defaultWallpaper"))
+                    $root.proto.Message.ChatDefaultWallpaper.encode(m.defaultWallpaper, w.uint32(82).fork(), q + 1).ldelim();
+                if (m.solidColor != null && Object.hasOwnProperty.call(m, "solidColor"))
+                    $root.proto.Message.ChatSolidColorWallpaper.encode(m.solidColor, w.uint32(90).fork(), q + 1).ldelim();
+                if (m.stockImage != null && Object.hasOwnProperty.call(m, "stockImage"))
+                    $root.proto.Message.ChatStockImageWallpaper.encode(m.stockImage, w.uint32(98).fork(), q + 1).ldelim();
+                if (m.customImage != null && Object.hasOwnProperty.call(m, "customImage"))
+                    $root.proto.Message.ChatCustomImageWallpaper.encode(m.customImage, w.uint32(106).fork(), q + 1).ldelim();
+                if (m.animatedWallpaper != null && Object.hasOwnProperty.call(m, "animatedWallpaper"))
+                    $root.proto.Message.ChatAnimatedWallpaper.encode(m.animatedWallpaper, w.uint32(114).fork(), q + 1).ldelim();
+                return w;
+            };
+
+            ChatThemeSetting.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.Message.ChatThemeSetting();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.settingTimestampMs = r.int64();
+                            break;
+                        }
+                    case 2: {
+                            m.clearTheme = r.bool();
+                            break;
+                        }
+                    case 3: {
+                            m.colorSchemeId = r.string();
+                            break;
+                        }
+                    case 10: {
+                            m.defaultWallpaper = $root.proto.Message.ChatDefaultWallpaper.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 11: {
+                            m.solidColor = $root.proto.Message.ChatSolidColorWallpaper.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 12: {
+                            m.stockImage = $root.proto.Message.ChatStockImageWallpaper.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 13: {
+                            m.customImage = $root.proto.Message.ChatCustomImageWallpaper.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 14: {
+                            m.animatedWallpaper = $root.proto.Message.ChatAnimatedWallpaper.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            ChatThemeSetting.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.Message.ChatThemeSetting)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.Message.ChatThemeSetting: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.Message.ChatThemeSetting();
+                if (d.settingTimestampMs != null) {
+                    if ($util.Long)
+                        m.settingTimestampMs = $util.Long.fromValue(d.settingTimestampMs, false);
+                    else if (typeof d.settingTimestampMs === "string")
+                        m.settingTimestampMs = parseInt(d.settingTimestampMs, 10);
+                    else if (typeof d.settingTimestampMs === "number")
+                        m.settingTimestampMs = d.settingTimestampMs;
+                    else if (typeof d.settingTimestampMs === "object")
+                        m.settingTimestampMs = new $util.LongBits(d.settingTimestampMs.low >>> 0, d.settingTimestampMs.high >>> 0).toNumber();
+                }
+                if (d.clearTheme != null) {
+                    m.clearTheme = Boolean(d.clearTheme);
+                }
+                if (d.colorSchemeId != null) {
+                    m.colorSchemeId = String(d.colorSchemeId);
+                }
+                if (d.defaultWallpaper != null) {
+                    if (!$util.isObject(d.defaultWallpaper))
+                        throw TypeError(".proto.Message.ChatThemeSetting.defaultWallpaper: object expected");
+                    m.defaultWallpaper = $root.proto.Message.ChatDefaultWallpaper.fromObject(d.defaultWallpaper, n + 1);
+                }
+                if (d.solidColor != null) {
+                    if (!$util.isObject(d.solidColor))
+                        throw TypeError(".proto.Message.ChatThemeSetting.solidColor: object expected");
+                    m.solidColor = $root.proto.Message.ChatSolidColorWallpaper.fromObject(d.solidColor, n + 1);
+                }
+                if (d.stockImage != null) {
+                    if (!$util.isObject(d.stockImage))
+                        throw TypeError(".proto.Message.ChatThemeSetting.stockImage: object expected");
+                    m.stockImage = $root.proto.Message.ChatStockImageWallpaper.fromObject(d.stockImage, n + 1);
+                }
+                if (d.customImage != null) {
+                    if (!$util.isObject(d.customImage))
+                        throw TypeError(".proto.Message.ChatThemeSetting.customImage: object expected");
+                    m.customImage = $root.proto.Message.ChatCustomImageWallpaper.fromObject(d.customImage, n + 1);
+                }
+                if (d.animatedWallpaper != null) {
+                    if (!$util.isObject(d.animatedWallpaper))
+                        throw TypeError(".proto.Message.ChatThemeSetting.animatedWallpaper: object expected");
+                    m.animatedWallpaper = $root.proto.Message.ChatAnimatedWallpaper.fromObject(d.animatedWallpaper, n + 1);
+                }
+                return m;
+            };
+
+            ChatThemeSetting.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.settingTimestampMs != null && Object.hasOwnProperty.call(m, "settingTimestampMs")) {
+                    if (typeof BigInt !== "undefined" && o.longs === BigInt)
+                        d.settingTimestampMs = typeof m.settingTimestampMs === "number" ? BigInt(m.settingTimestampMs) : $util.Long.fromBits(m.settingTimestampMs.low >>> 0, m.settingTimestampMs.high >>> 0, false).toBigInt();
+                    else if (typeof m.settingTimestampMs === "number")
+                        d.settingTimestampMs = o.longs === String ? String(m.settingTimestampMs) : m.settingTimestampMs;
+                    else
+                        d.settingTimestampMs = o.longs === String ? longToString(m.settingTimestampMs) : o.longs === Number ? longToNumber(m.settingTimestampMs) : m.settingTimestampMs;
+                    if (o.oneofs)
+                        d._settingTimestampMs = "settingTimestampMs";
+                }
+                if (m.clearTheme != null && Object.hasOwnProperty.call(m, "clearTheme")) {
+                    d.clearTheme = m.clearTheme;
+                    if (o.oneofs)
+                        d._clearTheme = "clearTheme";
+                }
+                if (m.colorSchemeId != null && Object.hasOwnProperty.call(m, "colorSchemeId")) {
+                    d.colorSchemeId = m.colorSchemeId;
+                    if (o.oneofs)
+                        d._colorSchemeId = "colorSchemeId";
+                }
+                if (m.defaultWallpaper != null && Object.hasOwnProperty.call(m, "defaultWallpaper")) {
+                    d.defaultWallpaper = $root.proto.Message.ChatDefaultWallpaper.toObject(m.defaultWallpaper, o, q + 1);
+                    if (o.oneofs)
+                        d.wallpaper = "defaultWallpaper";
+                }
+                if (m.solidColor != null && Object.hasOwnProperty.call(m, "solidColor")) {
+                    d.solidColor = $root.proto.Message.ChatSolidColorWallpaper.toObject(m.solidColor, o, q + 1);
+                    if (o.oneofs)
+                        d.wallpaper = "solidColor";
+                }
+                if (m.stockImage != null && Object.hasOwnProperty.call(m, "stockImage")) {
+                    d.stockImage = $root.proto.Message.ChatStockImageWallpaper.toObject(m.stockImage, o, q + 1);
+                    if (o.oneofs)
+                        d.wallpaper = "stockImage";
+                }
+                if (m.customImage != null && Object.hasOwnProperty.call(m, "customImage")) {
+                    d.customImage = $root.proto.Message.ChatCustomImageWallpaper.toObject(m.customImage, o, q + 1);
+                    if (o.oneofs)
+                        d.wallpaper = "customImage";
+                }
+                if (m.animatedWallpaper != null && Object.hasOwnProperty.call(m, "animatedWallpaper")) {
+                    d.animatedWallpaper = $root.proto.Message.ChatAnimatedWallpaper.toObject(m.animatedWallpaper, o, q + 1);
+                    if (o.oneofs)
+                        d.wallpaper = "animatedWallpaper";
+                }
+                return d;
+            };
+
+            ChatThemeSetting.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            ChatThemeSetting.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.Message.ChatThemeSetting";
+            };
+
+            return ChatThemeSetting;
+        })();
+
         Message.CloudAPIThreadControlNotification = (function() {
 
             function CloudAPIThreadControlNotification(p) {
@@ -65603,6 +66602,7 @@ export const proto = $root.proto = (() => {
             ProtocolMessage.prototype.aiPsiMetadata = null;
             ProtocolMessage.prototype.aiQueryFanout = null;
             ProtocolMessage.prototype.memberLabel = null;
+            ProtocolMessage.prototype.chatThemeSetting = null;
 
             let $oneOfFields;
 
@@ -65750,6 +66750,12 @@ export const proto = $root.proto = (() => {
                 set: $util.oneOfSetter($oneOfFields)
             });
 
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(ProtocolMessage.prototype, "_chatThemeSetting", {
+                get: $util.oneOfGetter($oneOfFields = ["chatThemeSetting"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
             ProtocolMessage.create = function create(properties) {
                 return new ProtocolMessage(properties);
             };
@@ -65809,6 +66815,8 @@ export const proto = $root.proto = (() => {
                     $root.proto.AIQueryFanout.encode(m.aiQueryFanout, w.uint32(210).fork(), q + 1).ldelim();
                 if (m.memberLabel != null && Object.hasOwnProperty.call(m, "memberLabel"))
                     $root.proto.MemberLabel.encode(m.memberLabel, w.uint32(218).fork(), q + 1).ldelim();
+                if (m.chatThemeSetting != null && Object.hasOwnProperty.call(m, "chatThemeSetting"))
+                    $root.proto.Message.ChatThemeSetting.encode(m.chatThemeSetting, w.uint32(242).fork(), q + 1).ldelim();
                 return w;
             };
 
@@ -65919,6 +66927,10 @@ export const proto = $root.proto = (() => {
                         }
                     case 27: {
                             m.memberLabel = $root.proto.MemberLabel.decode(r, r.uint32(), undefined, n + 1);
+                            break;
+                        }
+                    case 30: {
+                            m.chatThemeSetting = $root.proto.Message.ChatThemeSetting.decode(r, r.uint32(), undefined, n + 1);
                             break;
                         }
                     default:
@@ -66055,6 +67067,10 @@ export const proto = $root.proto = (() => {
                 case 30:
                     m.type = 30;
                     break;
+                case "CHAT_THEME_SETTING":
+                case 34:
+                    m.type = 34;
+                    break;
                 }
                 if (d.ephemeralExpiration != null) {
                     m.ephemeralExpiration = d.ephemeralExpiration >>> 0;
@@ -66172,6 +67188,11 @@ export const proto = $root.proto = (() => {
                     if (!$util.isObject(d.memberLabel))
                         throw TypeError(".proto.Message.ProtocolMessage.memberLabel: object expected");
                     m.memberLabel = $root.proto.MemberLabel.fromObject(d.memberLabel, n + 1);
+                }
+                if (d.chatThemeSetting != null) {
+                    if (!$util.isObject(d.chatThemeSetting))
+                        throw TypeError(".proto.Message.ProtocolMessage.chatThemeSetting: object expected");
+                    m.chatThemeSetting = $root.proto.Message.ChatThemeSetting.fromObject(d.chatThemeSetting, n + 1);
                 }
                 return m;
             };
@@ -66314,6 +67335,11 @@ export const proto = $root.proto = (() => {
                     if (o.oneofs)
                         d._memberLabel = "memberLabel";
                 }
+                if (m.chatThemeSetting != null && Object.hasOwnProperty.call(m, "chatThemeSetting")) {
+                    d.chatThemeSetting = $root.proto.Message.ChatThemeSetting.toObject(m.chatThemeSetting, o, q + 1);
+                    if (o.oneofs)
+                        d._chatThemeSetting = "chatThemeSetting";
+                }
                 return d;
             };
 
@@ -66356,6 +67382,7 @@ export const proto = $root.proto = (() => {
                 values[valuesById[28] = "AI_PSI_METADATA"] = 28;
                 values[valuesById[29] = "AI_QUERY_FANOUT"] = 29;
                 values[valuesById[30] = "GROUP_MEMBER_LABEL_CHANGE"] = 30;
+                values[valuesById[34] = "CHAT_THEME_SETTING"] = 34;
                 return values;
             })();
 
