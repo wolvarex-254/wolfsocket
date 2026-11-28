@@ -88381,6 +88381,7 @@ export const proto = $root.proto = (() => {
         SyncActionValue.prototype.newsletterSavedInterestsAction = null;
         SyncActionValue.prototype.aiThreadRenameAction = null;
         SyncActionValue.prototype.interactiveMessageAction = null;
+        SyncActionValue.prototype.settingsSyncAction = null;
 
         let $oneOfFields;
 
@@ -88798,6 +88799,12 @@ export const proto = $root.proto = (() => {
             set: $util.oneOfSetter($oneOfFields)
         });
 
+        // Virtual OneOf for proto3 optional field
+        Object.defineProperty(SyncActionValue.prototype, "_settingsSyncAction", {
+            get: $util.oneOfGetter($oneOfFields = ["settingsSyncAction"]),
+            set: $util.oneOfSetter($oneOfFields)
+        });
+
         SyncActionValue.create = function create(properties) {
             return new SyncActionValue(properties);
         };
@@ -88947,6 +88954,8 @@ export const proto = $root.proto = (() => {
                 $root.proto.SyncActionValue.AiThreadRenameAction.encode(m.aiThreadRenameAction, w.uint32(610).fork(), q + 1).ldelim();
             if (m.interactiveMessageAction != null && Object.hasOwnProperty.call(m, "interactiveMessageAction"))
                 $root.proto.SyncActionValue.InteractiveMessageAction.encode(m.interactiveMessageAction, w.uint32(618).fork(), q + 1).ldelim();
+            if (m.settingsSyncAction != null && Object.hasOwnProperty.call(m, "settingsSyncAction"))
+                $root.proto.SyncActionValue.SettingsSyncAction.encode(m.settingsSyncAction, w.uint32(626).fork(), q + 1).ldelim();
             return w;
         };
 
@@ -89237,6 +89246,10 @@ export const proto = $root.proto = (() => {
                     }
                 case 77: {
                         m.interactiveMessageAction = $root.proto.SyncActionValue.InteractiveMessageAction.decode(r, r.uint32(), undefined, n + 1);
+                        break;
+                    }
+                case 78: {
+                        m.settingsSyncAction = $root.proto.SyncActionValue.SettingsSyncAction.decode(r, r.uint32(), undefined, n + 1);
                         break;
                     }
                 default:
@@ -89607,6 +89620,11 @@ export const proto = $root.proto = (() => {
                     throw TypeError(".proto.SyncActionValue.interactiveMessageAction: object expected");
                 m.interactiveMessageAction = $root.proto.SyncActionValue.InteractiveMessageAction.fromObject(d.interactiveMessageAction, n + 1);
             }
+            if (d.settingsSyncAction != null) {
+                if (!$util.isObject(d.settingsSyncAction))
+                    throw TypeError(".proto.SyncActionValue.settingsSyncAction: object expected");
+                m.settingsSyncAction = $root.proto.SyncActionValue.SettingsSyncAction.fromObject(d.settingsSyncAction, n + 1);
+            }
             return m;
         };
 
@@ -89967,6 +89985,11 @@ export const proto = $root.proto = (() => {
                 d.interactiveMessageAction = $root.proto.SyncActionValue.InteractiveMessageAction.toObject(m.interactiveMessageAction, o, q + 1);
                 if (o.oneofs)
                     d._interactiveMessageAction = "interactiveMessageAction";
+            }
+            if (m.settingsSyncAction != null && Object.hasOwnProperty.call(m, "settingsSyncAction")) {
+                d.settingsSyncAction = $root.proto.SyncActionValue.SettingsSyncAction.toObject(m.settingsSyncAction, o, q + 1);
+                if (o.oneofs)
+                    d._settingsSyncAction = "settingsSyncAction";
             }
             return d;
         };
@@ -97563,6 +97586,982 @@ export const proto = $root.proto = (() => {
             };
 
             return RemoveRecentStickerAction;
+        })();
+
+        SyncActionValue.SettingsSyncAction = (function() {
+
+            function SettingsSyncAction(p) {
+                if (p)
+                    for (var ks = Object.keys(p), i = 0; i < ks.length; ++i)
+                        if (p[ks[i]] != null && ks[i] !== "__proto__")
+                            this[ks[i]] = p[ks[i]];
+            }
+
+            SettingsSyncAction.prototype.startAtLogin = null;
+            SettingsSyncAction.prototype.minimizeToTray = null;
+            SettingsSyncAction.prototype.language = null;
+            SettingsSyncAction.prototype.replaceTextWithEmoji = null;
+            SettingsSyncAction.prototype.bannerNotificationDisplayMode = null;
+            SettingsSyncAction.prototype.unreadCounterBadgeDisplayMode = null;
+            SettingsSyncAction.prototype.isMessagesNotificationEnabled = null;
+            SettingsSyncAction.prototype.isCallsNotificationEnabled = null;
+            SettingsSyncAction.prototype.isReactionsNotificationEnabled = null;
+            SettingsSyncAction.prototype.isStatusReactionsNotificationEnabled = null;
+            SettingsSyncAction.prototype.isTextPreviewForNotificationEnabled = null;
+            SettingsSyncAction.prototype.defaultNotificationToneId = null;
+            SettingsSyncAction.prototype.groupDefaultNotificationToneId = null;
+            SettingsSyncAction.prototype.appTheme = null;
+            SettingsSyncAction.prototype.wallpaperId = null;
+            SettingsSyncAction.prototype.isDoodleWallpaperEnabled = null;
+            SettingsSyncAction.prototype.fontSize = null;
+            SettingsSyncAction.prototype.isPhotosAutodownloadEnabled = null;
+            SettingsSyncAction.prototype.isAudiosAutodownloadEnabled = null;
+            SettingsSyncAction.prototype.isVideosAutodownloadEnabled = null;
+            SettingsSyncAction.prototype.isDocumentsAutodownloadEnabled = null;
+            SettingsSyncAction.prototype.disableLinkPreviews = null;
+            SettingsSyncAction.prototype.notificationToneId = null;
+            SettingsSyncAction.prototype.mediaUploadQuality = null;
+            SettingsSyncAction.prototype.isSpellCheckEnabled = null;
+            SettingsSyncAction.prototype.isEnterToSendEnabled = null;
+            SettingsSyncAction.prototype.isGroupMessageNotificationEnabled = null;
+            SettingsSyncAction.prototype.isGroupReactionsNotificationEnabled = null;
+            SettingsSyncAction.prototype.isStatusNotificationEnabled = null;
+            SettingsSyncAction.prototype.statusNotificationToneId = null;
+            SettingsSyncAction.prototype.shouldPlaySoundForCallNotification = null;
+            SettingsSyncAction.prototype.chatThemeId = null;
+            SettingsSyncAction.prototype.colorSchemeId = null;
+            SettingsSyncAction.prototype.stockWallpaperImageId = null;
+            SettingsSyncAction.prototype.mediaAutoDownloadQuality = null;
+
+            let $oneOfFields;
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_startAtLogin", {
+                get: $util.oneOfGetter($oneOfFields = ["startAtLogin"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_minimizeToTray", {
+                get: $util.oneOfGetter($oneOfFields = ["minimizeToTray"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_language", {
+                get: $util.oneOfGetter($oneOfFields = ["language"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_replaceTextWithEmoji", {
+                get: $util.oneOfGetter($oneOfFields = ["replaceTextWithEmoji"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_bannerNotificationDisplayMode", {
+                get: $util.oneOfGetter($oneOfFields = ["bannerNotificationDisplayMode"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_unreadCounterBadgeDisplayMode", {
+                get: $util.oneOfGetter($oneOfFields = ["unreadCounterBadgeDisplayMode"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isMessagesNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isMessagesNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isCallsNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isCallsNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isReactionsNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isReactionsNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isStatusReactionsNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isStatusReactionsNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isTextPreviewForNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isTextPreviewForNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_defaultNotificationToneId", {
+                get: $util.oneOfGetter($oneOfFields = ["defaultNotificationToneId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_groupDefaultNotificationToneId", {
+                get: $util.oneOfGetter($oneOfFields = ["groupDefaultNotificationToneId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_appTheme", {
+                get: $util.oneOfGetter($oneOfFields = ["appTheme"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_wallpaperId", {
+                get: $util.oneOfGetter($oneOfFields = ["wallpaperId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isDoodleWallpaperEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isDoodleWallpaperEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_fontSize", {
+                get: $util.oneOfGetter($oneOfFields = ["fontSize"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isPhotosAutodownloadEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isPhotosAutodownloadEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isAudiosAutodownloadEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isAudiosAutodownloadEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isVideosAutodownloadEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isVideosAutodownloadEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isDocumentsAutodownloadEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isDocumentsAutodownloadEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_disableLinkPreviews", {
+                get: $util.oneOfGetter($oneOfFields = ["disableLinkPreviews"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_notificationToneId", {
+                get: $util.oneOfGetter($oneOfFields = ["notificationToneId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_mediaUploadQuality", {
+                get: $util.oneOfGetter($oneOfFields = ["mediaUploadQuality"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isSpellCheckEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isSpellCheckEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isEnterToSendEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isEnterToSendEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isGroupMessageNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isGroupMessageNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isGroupReactionsNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isGroupReactionsNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_isStatusNotificationEnabled", {
+                get: $util.oneOfGetter($oneOfFields = ["isStatusNotificationEnabled"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_statusNotificationToneId", {
+                get: $util.oneOfGetter($oneOfFields = ["statusNotificationToneId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_shouldPlaySoundForCallNotification", {
+                get: $util.oneOfGetter($oneOfFields = ["shouldPlaySoundForCallNotification"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_chatThemeId", {
+                get: $util.oneOfGetter($oneOfFields = ["chatThemeId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_colorSchemeId", {
+                get: $util.oneOfGetter($oneOfFields = ["colorSchemeId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_stockWallpaperImageId", {
+                get: $util.oneOfGetter($oneOfFields = ["stockWallpaperImageId"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            // Virtual OneOf for proto3 optional field
+            Object.defineProperty(SettingsSyncAction.prototype, "_mediaAutoDownloadQuality", {
+                get: $util.oneOfGetter($oneOfFields = ["mediaAutoDownloadQuality"]),
+                set: $util.oneOfSetter($oneOfFields)
+            });
+
+            SettingsSyncAction.create = function create(properties) {
+                return new SettingsSyncAction(properties);
+            };
+
+            SettingsSyncAction.encode = function encode(m, w, q) {
+                if (!w)
+                    w = $Writer.create();
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                if (m.startAtLogin != null && Object.hasOwnProperty.call(m, "startAtLogin"))
+                    w.uint32(8).bool(m.startAtLogin);
+                if (m.minimizeToTray != null && Object.hasOwnProperty.call(m, "minimizeToTray"))
+                    w.uint32(16).bool(m.minimizeToTray);
+                if (m.language != null && Object.hasOwnProperty.call(m, "language"))
+                    w.uint32(26).string(m.language);
+                if (m.replaceTextWithEmoji != null && Object.hasOwnProperty.call(m, "replaceTextWithEmoji"))
+                    w.uint32(32).bool(m.replaceTextWithEmoji);
+                if (m.bannerNotificationDisplayMode != null && Object.hasOwnProperty.call(m, "bannerNotificationDisplayMode"))
+                    w.uint32(40).int32(m.bannerNotificationDisplayMode);
+                if (m.unreadCounterBadgeDisplayMode != null && Object.hasOwnProperty.call(m, "unreadCounterBadgeDisplayMode"))
+                    w.uint32(48).int32(m.unreadCounterBadgeDisplayMode);
+                if (m.isMessagesNotificationEnabled != null && Object.hasOwnProperty.call(m, "isMessagesNotificationEnabled"))
+                    w.uint32(56).bool(m.isMessagesNotificationEnabled);
+                if (m.isCallsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isCallsNotificationEnabled"))
+                    w.uint32(64).bool(m.isCallsNotificationEnabled);
+                if (m.isReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isReactionsNotificationEnabled"))
+                    w.uint32(72).bool(m.isReactionsNotificationEnabled);
+                if (m.isStatusReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isStatusReactionsNotificationEnabled"))
+                    w.uint32(80).bool(m.isStatusReactionsNotificationEnabled);
+                if (m.isTextPreviewForNotificationEnabled != null && Object.hasOwnProperty.call(m, "isTextPreviewForNotificationEnabled"))
+                    w.uint32(88).bool(m.isTextPreviewForNotificationEnabled);
+                if (m.defaultNotificationToneId != null && Object.hasOwnProperty.call(m, "defaultNotificationToneId"))
+                    w.uint32(96).int32(m.defaultNotificationToneId);
+                if (m.groupDefaultNotificationToneId != null && Object.hasOwnProperty.call(m, "groupDefaultNotificationToneId"))
+                    w.uint32(104).int32(m.groupDefaultNotificationToneId);
+                if (m.appTheme != null && Object.hasOwnProperty.call(m, "appTheme"))
+                    w.uint32(112).int32(m.appTheme);
+                if (m.wallpaperId != null && Object.hasOwnProperty.call(m, "wallpaperId"))
+                    w.uint32(120).int32(m.wallpaperId);
+                if (m.isDoodleWallpaperEnabled != null && Object.hasOwnProperty.call(m, "isDoodleWallpaperEnabled"))
+                    w.uint32(128).bool(m.isDoodleWallpaperEnabled);
+                if (m.fontSize != null && Object.hasOwnProperty.call(m, "fontSize"))
+                    w.uint32(136).int32(m.fontSize);
+                if (m.isPhotosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isPhotosAutodownloadEnabled"))
+                    w.uint32(144).bool(m.isPhotosAutodownloadEnabled);
+                if (m.isAudiosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isAudiosAutodownloadEnabled"))
+                    w.uint32(152).bool(m.isAudiosAutodownloadEnabled);
+                if (m.isVideosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isVideosAutodownloadEnabled"))
+                    w.uint32(160).bool(m.isVideosAutodownloadEnabled);
+                if (m.isDocumentsAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isDocumentsAutodownloadEnabled"))
+                    w.uint32(168).bool(m.isDocumentsAutodownloadEnabled);
+                if (m.disableLinkPreviews != null && Object.hasOwnProperty.call(m, "disableLinkPreviews"))
+                    w.uint32(176).bool(m.disableLinkPreviews);
+                if (m.notificationToneId != null && Object.hasOwnProperty.call(m, "notificationToneId"))
+                    w.uint32(184).int32(m.notificationToneId);
+                if (m.mediaUploadQuality != null && Object.hasOwnProperty.call(m, "mediaUploadQuality"))
+                    w.uint32(192).int32(m.mediaUploadQuality);
+                if (m.isSpellCheckEnabled != null && Object.hasOwnProperty.call(m, "isSpellCheckEnabled"))
+                    w.uint32(200).bool(m.isSpellCheckEnabled);
+                if (m.isEnterToSendEnabled != null && Object.hasOwnProperty.call(m, "isEnterToSendEnabled"))
+                    w.uint32(208).bool(m.isEnterToSendEnabled);
+                if (m.isGroupMessageNotificationEnabled != null && Object.hasOwnProperty.call(m, "isGroupMessageNotificationEnabled"))
+                    w.uint32(216).bool(m.isGroupMessageNotificationEnabled);
+                if (m.isGroupReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isGroupReactionsNotificationEnabled"))
+                    w.uint32(224).bool(m.isGroupReactionsNotificationEnabled);
+                if (m.isStatusNotificationEnabled != null && Object.hasOwnProperty.call(m, "isStatusNotificationEnabled"))
+                    w.uint32(232).bool(m.isStatusNotificationEnabled);
+                if (m.statusNotificationToneId != null && Object.hasOwnProperty.call(m, "statusNotificationToneId"))
+                    w.uint32(240).int32(m.statusNotificationToneId);
+                if (m.shouldPlaySoundForCallNotification != null && Object.hasOwnProperty.call(m, "shouldPlaySoundForCallNotification"))
+                    w.uint32(248).bool(m.shouldPlaySoundForCallNotification);
+                if (m.chatThemeId != null && Object.hasOwnProperty.call(m, "chatThemeId"))
+                    w.uint32(258).string(m.chatThemeId);
+                if (m.colorSchemeId != null && Object.hasOwnProperty.call(m, "colorSchemeId"))
+                    w.uint32(266).string(m.colorSchemeId);
+                if (m.stockWallpaperImageId != null && Object.hasOwnProperty.call(m, "stockWallpaperImageId"))
+                    w.uint32(274).string(m.stockWallpaperImageId);
+                if (m.mediaAutoDownloadQuality != null && Object.hasOwnProperty.call(m, "mediaAutoDownloadQuality"))
+                    w.uint32(280).int32(m.mediaAutoDownloadQuality);
+                return w;
+            };
+
+            SettingsSyncAction.decode = function decode(r, l, e, n) {
+                if (!(r instanceof $Reader))
+                    r = $Reader.create(r);
+                if (n === undefined)
+                    n = 0;
+                if (n > $Reader.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var c = l === undefined ? r.len : r.pos + l, m = new $root.proto.SyncActionValue.SettingsSyncAction();
+                while (r.pos < c) {
+                    var t = r.uint32();
+                    if (t === e)
+                        break;
+                    switch (t >>> 3) {
+                    case 1: {
+                            m.startAtLogin = r.bool();
+                            break;
+                        }
+                    case 2: {
+                            m.minimizeToTray = r.bool();
+                            break;
+                        }
+                    case 3: {
+                            m.language = r.string();
+                            break;
+                        }
+                    case 4: {
+                            m.replaceTextWithEmoji = r.bool();
+                            break;
+                        }
+                    case 5: {
+                            m.bannerNotificationDisplayMode = r.int32();
+                            break;
+                        }
+                    case 6: {
+                            m.unreadCounterBadgeDisplayMode = r.int32();
+                            break;
+                        }
+                    case 7: {
+                            m.isMessagesNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 8: {
+                            m.isCallsNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 9: {
+                            m.isReactionsNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 10: {
+                            m.isStatusReactionsNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 11: {
+                            m.isTextPreviewForNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 12: {
+                            m.defaultNotificationToneId = r.int32();
+                            break;
+                        }
+                    case 13: {
+                            m.groupDefaultNotificationToneId = r.int32();
+                            break;
+                        }
+                    case 14: {
+                            m.appTheme = r.int32();
+                            break;
+                        }
+                    case 15: {
+                            m.wallpaperId = r.int32();
+                            break;
+                        }
+                    case 16: {
+                            m.isDoodleWallpaperEnabled = r.bool();
+                            break;
+                        }
+                    case 17: {
+                            m.fontSize = r.int32();
+                            break;
+                        }
+                    case 18: {
+                            m.isPhotosAutodownloadEnabled = r.bool();
+                            break;
+                        }
+                    case 19: {
+                            m.isAudiosAutodownloadEnabled = r.bool();
+                            break;
+                        }
+                    case 20: {
+                            m.isVideosAutodownloadEnabled = r.bool();
+                            break;
+                        }
+                    case 21: {
+                            m.isDocumentsAutodownloadEnabled = r.bool();
+                            break;
+                        }
+                    case 22: {
+                            m.disableLinkPreviews = r.bool();
+                            break;
+                        }
+                    case 23: {
+                            m.notificationToneId = r.int32();
+                            break;
+                        }
+                    case 24: {
+                            m.mediaUploadQuality = r.int32();
+                            break;
+                        }
+                    case 25: {
+                            m.isSpellCheckEnabled = r.bool();
+                            break;
+                        }
+                    case 26: {
+                            m.isEnterToSendEnabled = r.bool();
+                            break;
+                        }
+                    case 27: {
+                            m.isGroupMessageNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 28: {
+                            m.isGroupReactionsNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 29: {
+                            m.isStatusNotificationEnabled = r.bool();
+                            break;
+                        }
+                    case 30: {
+                            m.statusNotificationToneId = r.int32();
+                            break;
+                        }
+                    case 31: {
+                            m.shouldPlaySoundForCallNotification = r.bool();
+                            break;
+                        }
+                    case 32: {
+                            m.chatThemeId = r.string();
+                            break;
+                        }
+                    case 33: {
+                            m.colorSchemeId = r.string();
+                            break;
+                        }
+                    case 34: {
+                            m.stockWallpaperImageId = r.string();
+                            break;
+                        }
+                    case 35: {
+                            m.mediaAutoDownloadQuality = r.int32();
+                            break;
+                        }
+                    default:
+                        r.skipType(t & 7, n);
+                        break;
+                    }
+                }
+                return m;
+            };
+
+            SettingsSyncAction.fromObject = function fromObject(d, n) {
+                if (d instanceof $root.proto.SyncActionValue.SettingsSyncAction)
+                    return d;
+                if (!$util.isObject(d))
+                    throw TypeError(".proto.SyncActionValue.SettingsSyncAction: object expected");
+                if (n === undefined)
+                    n = 0;
+                if (n > $util.recursionLimit)
+                    throw Error("maximum nesting depth exceeded");
+                var m = new $root.proto.SyncActionValue.SettingsSyncAction();
+                if (d.startAtLogin != null) {
+                    m.startAtLogin = Boolean(d.startAtLogin);
+                }
+                if (d.minimizeToTray != null) {
+                    m.minimizeToTray = Boolean(d.minimizeToTray);
+                }
+                if (d.language != null) {
+                    m.language = String(d.language);
+                }
+                if (d.replaceTextWithEmoji != null) {
+                    m.replaceTextWithEmoji = Boolean(d.replaceTextWithEmoji);
+                }
+                switch (d.bannerNotificationDisplayMode) {
+                default:
+                    if (typeof d.bannerNotificationDisplayMode === "number") {
+                        m.bannerNotificationDisplayMode = d.bannerNotificationDisplayMode;
+                        break;
+                    }
+                    break;
+                case "DISPLAY_MODE_UNKNOWN":
+                case 0:
+                    m.bannerNotificationDisplayMode = 0;
+                    break;
+                case "ALWAYS":
+                case 1:
+                    m.bannerNotificationDisplayMode = 1;
+                    break;
+                case "NEVER":
+                case 2:
+                    m.bannerNotificationDisplayMode = 2;
+                    break;
+                case "ONLY_WHEN_APP_IS_OPEN":
+                case 3:
+                    m.bannerNotificationDisplayMode = 3;
+                    break;
+                }
+                switch (d.unreadCounterBadgeDisplayMode) {
+                default:
+                    if (typeof d.unreadCounterBadgeDisplayMode === "number") {
+                        m.unreadCounterBadgeDisplayMode = d.unreadCounterBadgeDisplayMode;
+                        break;
+                    }
+                    break;
+                case "DISPLAY_MODE_UNKNOWN":
+                case 0:
+                    m.unreadCounterBadgeDisplayMode = 0;
+                    break;
+                case "ALWAYS":
+                case 1:
+                    m.unreadCounterBadgeDisplayMode = 1;
+                    break;
+                case "NEVER":
+                case 2:
+                    m.unreadCounterBadgeDisplayMode = 2;
+                    break;
+                case "ONLY_WHEN_APP_IS_OPEN":
+                case 3:
+                    m.unreadCounterBadgeDisplayMode = 3;
+                    break;
+                }
+                if (d.isMessagesNotificationEnabled != null) {
+                    m.isMessagesNotificationEnabled = Boolean(d.isMessagesNotificationEnabled);
+                }
+                if (d.isCallsNotificationEnabled != null) {
+                    m.isCallsNotificationEnabled = Boolean(d.isCallsNotificationEnabled);
+                }
+                if (d.isReactionsNotificationEnabled != null) {
+                    m.isReactionsNotificationEnabled = Boolean(d.isReactionsNotificationEnabled);
+                }
+                if (d.isStatusReactionsNotificationEnabled != null) {
+                    m.isStatusReactionsNotificationEnabled = Boolean(d.isStatusReactionsNotificationEnabled);
+                }
+                if (d.isTextPreviewForNotificationEnabled != null) {
+                    m.isTextPreviewForNotificationEnabled = Boolean(d.isTextPreviewForNotificationEnabled);
+                }
+                if (d.defaultNotificationToneId != null) {
+                    m.defaultNotificationToneId = d.defaultNotificationToneId | 0;
+                }
+                if (d.groupDefaultNotificationToneId != null) {
+                    m.groupDefaultNotificationToneId = d.groupDefaultNotificationToneId | 0;
+                }
+                if (d.appTheme != null) {
+                    m.appTheme = d.appTheme | 0;
+                }
+                if (d.wallpaperId != null) {
+                    m.wallpaperId = d.wallpaperId | 0;
+                }
+                if (d.isDoodleWallpaperEnabled != null) {
+                    m.isDoodleWallpaperEnabled = Boolean(d.isDoodleWallpaperEnabled);
+                }
+                if (d.fontSize != null) {
+                    m.fontSize = d.fontSize | 0;
+                }
+                if (d.isPhotosAutodownloadEnabled != null) {
+                    m.isPhotosAutodownloadEnabled = Boolean(d.isPhotosAutodownloadEnabled);
+                }
+                if (d.isAudiosAutodownloadEnabled != null) {
+                    m.isAudiosAutodownloadEnabled = Boolean(d.isAudiosAutodownloadEnabled);
+                }
+                if (d.isVideosAutodownloadEnabled != null) {
+                    m.isVideosAutodownloadEnabled = Boolean(d.isVideosAutodownloadEnabled);
+                }
+                if (d.isDocumentsAutodownloadEnabled != null) {
+                    m.isDocumentsAutodownloadEnabled = Boolean(d.isDocumentsAutodownloadEnabled);
+                }
+                if (d.disableLinkPreviews != null) {
+                    m.disableLinkPreviews = Boolean(d.disableLinkPreviews);
+                }
+                if (d.notificationToneId != null) {
+                    m.notificationToneId = d.notificationToneId | 0;
+                }
+                switch (d.mediaUploadQuality) {
+                default:
+                    if (typeof d.mediaUploadQuality === "number") {
+                        m.mediaUploadQuality = d.mediaUploadQuality;
+                        break;
+                    }
+                    break;
+                case "MEDIA_QUALITY_UNKNOWN":
+                case 0:
+                    m.mediaUploadQuality = 0;
+                    break;
+                case "STANDARD":
+                case 1:
+                    m.mediaUploadQuality = 1;
+                    break;
+                case "HD":
+                case 2:
+                    m.mediaUploadQuality = 2;
+                    break;
+                }
+                if (d.isSpellCheckEnabled != null) {
+                    m.isSpellCheckEnabled = Boolean(d.isSpellCheckEnabled);
+                }
+                if (d.isEnterToSendEnabled != null) {
+                    m.isEnterToSendEnabled = Boolean(d.isEnterToSendEnabled);
+                }
+                if (d.isGroupMessageNotificationEnabled != null) {
+                    m.isGroupMessageNotificationEnabled = Boolean(d.isGroupMessageNotificationEnabled);
+                }
+                if (d.isGroupReactionsNotificationEnabled != null) {
+                    m.isGroupReactionsNotificationEnabled = Boolean(d.isGroupReactionsNotificationEnabled);
+                }
+                if (d.isStatusNotificationEnabled != null) {
+                    m.isStatusNotificationEnabled = Boolean(d.isStatusNotificationEnabled);
+                }
+                if (d.statusNotificationToneId != null) {
+                    m.statusNotificationToneId = d.statusNotificationToneId | 0;
+                }
+                if (d.shouldPlaySoundForCallNotification != null) {
+                    m.shouldPlaySoundForCallNotification = Boolean(d.shouldPlaySoundForCallNotification);
+                }
+                if (d.chatThemeId != null) {
+                    m.chatThemeId = String(d.chatThemeId);
+                }
+                if (d.colorSchemeId != null) {
+                    m.colorSchemeId = String(d.colorSchemeId);
+                }
+                if (d.stockWallpaperImageId != null) {
+                    m.stockWallpaperImageId = String(d.stockWallpaperImageId);
+                }
+                switch (d.mediaAutoDownloadQuality) {
+                default:
+                    if (typeof d.mediaAutoDownloadQuality === "number") {
+                        m.mediaAutoDownloadQuality = d.mediaAutoDownloadQuality;
+                        break;
+                    }
+                    break;
+                case "MEDIA_AUTO_DOWNLOAD_QUALITY_UNKNOWN":
+                case 0:
+                    m.mediaAutoDownloadQuality = 0;
+                    break;
+                case "MEDIA_AUTO_DOWNLOAD_QUALITY_STANDARD":
+                case 1:
+                    m.mediaAutoDownloadQuality = 1;
+                    break;
+                case "MEDIA_AUTO_DOWNLOAD_QUALITY_HD":
+                case 2:
+                    m.mediaAutoDownloadQuality = 2;
+                    break;
+                case "MEDIA_AUTO_DOWNLOAD_QUALITY_AUTO":
+                case 3:
+                    m.mediaAutoDownloadQuality = 3;
+                    break;
+                }
+                return m;
+            };
+
+            SettingsSyncAction.toObject = function toObject(m, o, q) {
+                if (!o)
+                    o = {};
+                if (q === undefined)
+                    q = 0;
+                if (q > $util.recursionLimit)
+                    throw Error("max depth exceeded");
+                var d = {};
+                if (m.startAtLogin != null && Object.hasOwnProperty.call(m, "startAtLogin")) {
+                    d.startAtLogin = m.startAtLogin;
+                    if (o.oneofs)
+                        d._startAtLogin = "startAtLogin";
+                }
+                if (m.minimizeToTray != null && Object.hasOwnProperty.call(m, "minimizeToTray")) {
+                    d.minimizeToTray = m.minimizeToTray;
+                    if (o.oneofs)
+                        d._minimizeToTray = "minimizeToTray";
+                }
+                if (m.language != null && Object.hasOwnProperty.call(m, "language")) {
+                    d.language = m.language;
+                    if (o.oneofs)
+                        d._language = "language";
+                }
+                if (m.replaceTextWithEmoji != null && Object.hasOwnProperty.call(m, "replaceTextWithEmoji")) {
+                    d.replaceTextWithEmoji = m.replaceTextWithEmoji;
+                    if (o.oneofs)
+                        d._replaceTextWithEmoji = "replaceTextWithEmoji";
+                }
+                if (m.bannerNotificationDisplayMode != null && Object.hasOwnProperty.call(m, "bannerNotificationDisplayMode")) {
+                    d.bannerNotificationDisplayMode = o.enums === String ? $root.proto.SyncActionValue.SettingsSyncAction.DisplayMode[m.bannerNotificationDisplayMode] === undefined ? m.bannerNotificationDisplayMode : $root.proto.SyncActionValue.SettingsSyncAction.DisplayMode[m.bannerNotificationDisplayMode] : m.bannerNotificationDisplayMode;
+                    if (o.oneofs)
+                        d._bannerNotificationDisplayMode = "bannerNotificationDisplayMode";
+                }
+                if (m.unreadCounterBadgeDisplayMode != null && Object.hasOwnProperty.call(m, "unreadCounterBadgeDisplayMode")) {
+                    d.unreadCounterBadgeDisplayMode = o.enums === String ? $root.proto.SyncActionValue.SettingsSyncAction.DisplayMode[m.unreadCounterBadgeDisplayMode] === undefined ? m.unreadCounterBadgeDisplayMode : $root.proto.SyncActionValue.SettingsSyncAction.DisplayMode[m.unreadCounterBadgeDisplayMode] : m.unreadCounterBadgeDisplayMode;
+                    if (o.oneofs)
+                        d._unreadCounterBadgeDisplayMode = "unreadCounterBadgeDisplayMode";
+                }
+                if (m.isMessagesNotificationEnabled != null && Object.hasOwnProperty.call(m, "isMessagesNotificationEnabled")) {
+                    d.isMessagesNotificationEnabled = m.isMessagesNotificationEnabled;
+                    if (o.oneofs)
+                        d._isMessagesNotificationEnabled = "isMessagesNotificationEnabled";
+                }
+                if (m.isCallsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isCallsNotificationEnabled")) {
+                    d.isCallsNotificationEnabled = m.isCallsNotificationEnabled;
+                    if (o.oneofs)
+                        d._isCallsNotificationEnabled = "isCallsNotificationEnabled";
+                }
+                if (m.isReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isReactionsNotificationEnabled")) {
+                    d.isReactionsNotificationEnabled = m.isReactionsNotificationEnabled;
+                    if (o.oneofs)
+                        d._isReactionsNotificationEnabled = "isReactionsNotificationEnabled";
+                }
+                if (m.isStatusReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isStatusReactionsNotificationEnabled")) {
+                    d.isStatusReactionsNotificationEnabled = m.isStatusReactionsNotificationEnabled;
+                    if (o.oneofs)
+                        d._isStatusReactionsNotificationEnabled = "isStatusReactionsNotificationEnabled";
+                }
+                if (m.isTextPreviewForNotificationEnabled != null && Object.hasOwnProperty.call(m, "isTextPreviewForNotificationEnabled")) {
+                    d.isTextPreviewForNotificationEnabled = m.isTextPreviewForNotificationEnabled;
+                    if (o.oneofs)
+                        d._isTextPreviewForNotificationEnabled = "isTextPreviewForNotificationEnabled";
+                }
+                if (m.defaultNotificationToneId != null && Object.hasOwnProperty.call(m, "defaultNotificationToneId")) {
+                    d.defaultNotificationToneId = m.defaultNotificationToneId;
+                    if (o.oneofs)
+                        d._defaultNotificationToneId = "defaultNotificationToneId";
+                }
+                if (m.groupDefaultNotificationToneId != null && Object.hasOwnProperty.call(m, "groupDefaultNotificationToneId")) {
+                    d.groupDefaultNotificationToneId = m.groupDefaultNotificationToneId;
+                    if (o.oneofs)
+                        d._groupDefaultNotificationToneId = "groupDefaultNotificationToneId";
+                }
+                if (m.appTheme != null && Object.hasOwnProperty.call(m, "appTheme")) {
+                    d.appTheme = m.appTheme;
+                    if (o.oneofs)
+                        d._appTheme = "appTheme";
+                }
+                if (m.wallpaperId != null && Object.hasOwnProperty.call(m, "wallpaperId")) {
+                    d.wallpaperId = m.wallpaperId;
+                    if (o.oneofs)
+                        d._wallpaperId = "wallpaperId";
+                }
+                if (m.isDoodleWallpaperEnabled != null && Object.hasOwnProperty.call(m, "isDoodleWallpaperEnabled")) {
+                    d.isDoodleWallpaperEnabled = m.isDoodleWallpaperEnabled;
+                    if (o.oneofs)
+                        d._isDoodleWallpaperEnabled = "isDoodleWallpaperEnabled";
+                }
+                if (m.fontSize != null && Object.hasOwnProperty.call(m, "fontSize")) {
+                    d.fontSize = m.fontSize;
+                    if (o.oneofs)
+                        d._fontSize = "fontSize";
+                }
+                if (m.isPhotosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isPhotosAutodownloadEnabled")) {
+                    d.isPhotosAutodownloadEnabled = m.isPhotosAutodownloadEnabled;
+                    if (o.oneofs)
+                        d._isPhotosAutodownloadEnabled = "isPhotosAutodownloadEnabled";
+                }
+                if (m.isAudiosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isAudiosAutodownloadEnabled")) {
+                    d.isAudiosAutodownloadEnabled = m.isAudiosAutodownloadEnabled;
+                    if (o.oneofs)
+                        d._isAudiosAutodownloadEnabled = "isAudiosAutodownloadEnabled";
+                }
+                if (m.isVideosAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isVideosAutodownloadEnabled")) {
+                    d.isVideosAutodownloadEnabled = m.isVideosAutodownloadEnabled;
+                    if (o.oneofs)
+                        d._isVideosAutodownloadEnabled = "isVideosAutodownloadEnabled";
+                }
+                if (m.isDocumentsAutodownloadEnabled != null && Object.hasOwnProperty.call(m, "isDocumentsAutodownloadEnabled")) {
+                    d.isDocumentsAutodownloadEnabled = m.isDocumentsAutodownloadEnabled;
+                    if (o.oneofs)
+                        d._isDocumentsAutodownloadEnabled = "isDocumentsAutodownloadEnabled";
+                }
+                if (m.disableLinkPreviews != null && Object.hasOwnProperty.call(m, "disableLinkPreviews")) {
+                    d.disableLinkPreviews = m.disableLinkPreviews;
+                    if (o.oneofs)
+                        d._disableLinkPreviews = "disableLinkPreviews";
+                }
+                if (m.notificationToneId != null && Object.hasOwnProperty.call(m, "notificationToneId")) {
+                    d.notificationToneId = m.notificationToneId;
+                    if (o.oneofs)
+                        d._notificationToneId = "notificationToneId";
+                }
+                if (m.mediaUploadQuality != null && Object.hasOwnProperty.call(m, "mediaUploadQuality")) {
+                    d.mediaUploadQuality = o.enums === String ? $root.proto.SyncActionValue.SettingsSyncAction.MediaQualitySetting[m.mediaUploadQuality] === undefined ? m.mediaUploadQuality : $root.proto.SyncActionValue.SettingsSyncAction.MediaQualitySetting[m.mediaUploadQuality] : m.mediaUploadQuality;
+                    if (o.oneofs)
+                        d._mediaUploadQuality = "mediaUploadQuality";
+                }
+                if (m.isSpellCheckEnabled != null && Object.hasOwnProperty.call(m, "isSpellCheckEnabled")) {
+                    d.isSpellCheckEnabled = m.isSpellCheckEnabled;
+                    if (o.oneofs)
+                        d._isSpellCheckEnabled = "isSpellCheckEnabled";
+                }
+                if (m.isEnterToSendEnabled != null && Object.hasOwnProperty.call(m, "isEnterToSendEnabled")) {
+                    d.isEnterToSendEnabled = m.isEnterToSendEnabled;
+                    if (o.oneofs)
+                        d._isEnterToSendEnabled = "isEnterToSendEnabled";
+                }
+                if (m.isGroupMessageNotificationEnabled != null && Object.hasOwnProperty.call(m, "isGroupMessageNotificationEnabled")) {
+                    d.isGroupMessageNotificationEnabled = m.isGroupMessageNotificationEnabled;
+                    if (o.oneofs)
+                        d._isGroupMessageNotificationEnabled = "isGroupMessageNotificationEnabled";
+                }
+                if (m.isGroupReactionsNotificationEnabled != null && Object.hasOwnProperty.call(m, "isGroupReactionsNotificationEnabled")) {
+                    d.isGroupReactionsNotificationEnabled = m.isGroupReactionsNotificationEnabled;
+                    if (o.oneofs)
+                        d._isGroupReactionsNotificationEnabled = "isGroupReactionsNotificationEnabled";
+                }
+                if (m.isStatusNotificationEnabled != null && Object.hasOwnProperty.call(m, "isStatusNotificationEnabled")) {
+                    d.isStatusNotificationEnabled = m.isStatusNotificationEnabled;
+                    if (o.oneofs)
+                        d._isStatusNotificationEnabled = "isStatusNotificationEnabled";
+                }
+                if (m.statusNotificationToneId != null && Object.hasOwnProperty.call(m, "statusNotificationToneId")) {
+                    d.statusNotificationToneId = m.statusNotificationToneId;
+                    if (o.oneofs)
+                        d._statusNotificationToneId = "statusNotificationToneId";
+                }
+                if (m.shouldPlaySoundForCallNotification != null && Object.hasOwnProperty.call(m, "shouldPlaySoundForCallNotification")) {
+                    d.shouldPlaySoundForCallNotification = m.shouldPlaySoundForCallNotification;
+                    if (o.oneofs)
+                        d._shouldPlaySoundForCallNotification = "shouldPlaySoundForCallNotification";
+                }
+                if (m.chatThemeId != null && Object.hasOwnProperty.call(m, "chatThemeId")) {
+                    d.chatThemeId = m.chatThemeId;
+                    if (o.oneofs)
+                        d._chatThemeId = "chatThemeId";
+                }
+                if (m.colorSchemeId != null && Object.hasOwnProperty.call(m, "colorSchemeId")) {
+                    d.colorSchemeId = m.colorSchemeId;
+                    if (o.oneofs)
+                        d._colorSchemeId = "colorSchemeId";
+                }
+                if (m.stockWallpaperImageId != null && Object.hasOwnProperty.call(m, "stockWallpaperImageId")) {
+                    d.stockWallpaperImageId = m.stockWallpaperImageId;
+                    if (o.oneofs)
+                        d._stockWallpaperImageId = "stockWallpaperImageId";
+                }
+                if (m.mediaAutoDownloadQuality != null && Object.hasOwnProperty.call(m, "mediaAutoDownloadQuality")) {
+                    d.mediaAutoDownloadQuality = o.enums === String ? $root.proto.SyncActionValue.SettingsSyncAction.MediaAutoDownloadQualitySetting[m.mediaAutoDownloadQuality] === undefined ? m.mediaAutoDownloadQuality : $root.proto.SyncActionValue.SettingsSyncAction.MediaAutoDownloadQualitySetting[m.mediaAutoDownloadQuality] : m.mediaAutoDownloadQuality;
+                    if (o.oneofs)
+                        d._mediaAutoDownloadQuality = "mediaAutoDownloadQuality";
+                }
+                return d;
+            };
+
+            SettingsSyncAction.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            SettingsSyncAction.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/proto.SyncActionValue.SettingsSyncAction";
+            };
+
+            SettingsSyncAction.DisplayMode = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "DISPLAY_MODE_UNKNOWN"] = 0;
+                values[valuesById[1] = "ALWAYS"] = 1;
+                values[valuesById[2] = "NEVER"] = 2;
+                values[valuesById[3] = "ONLY_WHEN_APP_IS_OPEN"] = 3;
+                return values;
+            })();
+
+            SettingsSyncAction.MediaQualitySetting = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "MEDIA_QUALITY_UNKNOWN"] = 0;
+                values[valuesById[1] = "STANDARD"] = 1;
+                values[valuesById[2] = "HD"] = 2;
+                return values;
+            })();
+
+            SettingsSyncAction.SettingKey = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "SETTING_KEY_UNKNOWN"] = 0;
+                values[valuesById[1] = "START_AT_LOGIN"] = 1;
+                values[valuesById[2] = "MINIMIZE_TO_TRAY"] = 2;
+                values[valuesById[3] = "LANGUAGE"] = 3;
+                values[valuesById[4] = "REPLACE_TEXT_WITH_EMOJI"] = 4;
+                values[valuesById[5] = "BANNER_NOTIFICATION_DISPLAY_MODE"] = 5;
+                values[valuesById[6] = "UNREAD_COUNTER_BADGE_DISPLAY_MODE"] = 6;
+                values[valuesById[7] = "IS_MESSAGES_NOTIFICATION_ENABLED"] = 7;
+                values[valuesById[8] = "IS_CALLS_NOTIFICATION_ENABLED"] = 8;
+                values[valuesById[9] = "IS_REACTIONS_NOTIFICATION_ENABLED"] = 9;
+                values[valuesById[10] = "IS_STATUS_REACTIONS_NOTIFICATION_ENABLED"] = 10;
+                values[valuesById[11] = "IS_TEXT_PREVIEW_FOR_NOTIFICATION_ENABLED"] = 11;
+                values[valuesById[12] = "DEFAULT_NOTIFICATION_TONE_ID"] = 12;
+                values[valuesById[13] = "GROUP_DEFAULT_NOTIFICATION_TONE_ID"] = 13;
+                values[valuesById[14] = "APP_THEME"] = 14;
+                values[valuesById[15] = "WALLPAPER_ID"] = 15;
+                values[valuesById[16] = "IS_DOODLE_WALLPAPER_ENABLED"] = 16;
+                values[valuesById[17] = "FONT_SIZE"] = 17;
+                values[valuesById[18] = "IS_PHOTOS_AUTODOWNLOAD_ENABLED"] = 18;
+                values[valuesById[19] = "IS_AUDIOS_AUTODOWNLOAD_ENABLED"] = 19;
+                values[valuesById[20] = "IS_VIDEOS_AUTODOWNLOAD_ENABLED"] = 20;
+                values[valuesById[21] = "IS_DOCUMENTS_AUTODOWNLOAD_ENABLED"] = 21;
+                values[valuesById[22] = "DISABLE_LINK_PREVIEWS"] = 22;
+                values[valuesById[23] = "NOTIFICATION_TONE_ID"] = 23;
+                values[valuesById[24] = "MEDIA_UPLOAD_QUALITY"] = 24;
+                values[valuesById[25] = "IS_SPELL_CHECK_ENABLED"] = 25;
+                values[valuesById[26] = "IS_ENTER_TO_SEND_ENABLED"] = 26;
+                values[valuesById[27] = "IS_GROUP_MESSAGE_NOTIFICATION_ENABLED"] = 27;
+                values[valuesById[28] = "IS_GROUP_REACTIONS_NOTIFICATION_ENABLED"] = 28;
+                values[valuesById[29] = "IS_STATUS_NOTIFICATION_ENABLED"] = 29;
+                values[valuesById[30] = "STATUS_NOTIFICATION_TONE_ID"] = 30;
+                values[valuesById[31] = "SHOULD_PLAY_SOUND_FOR_CALL_NOTIFICATION"] = 31;
+                values[valuesById[32] = "CHAT_THEME_ID"] = 32;
+                values[valuesById[33] = "COLOR_SCHEME_ID"] = 33;
+                values[valuesById[34] = "STOCK_WALLPAPER_IMAGE_ID"] = 34;
+                return values;
+            })();
+
+            SettingsSyncAction.SettingPlatform = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "PLATFORM_UNKNOWN"] = 0;
+                values[valuesById[1] = "WEB"] = 1;
+                values[valuesById[2] = "HYBRID"] = 2;
+                values[valuesById[3] = "WINDOWS"] = 3;
+                values[valuesById[4] = "MAC"] = 4;
+                return values;
+            })();
+
+            SettingsSyncAction.MediaAutoDownloadQualitySetting = (function() {
+                const valuesById = {}, values = Object.create(valuesById);
+                values[valuesById[0] = "MEDIA_AUTO_DOWNLOAD_QUALITY_UNKNOWN"] = 0;
+                values[valuesById[1] = "MEDIA_AUTO_DOWNLOAD_QUALITY_STANDARD"] = 1;
+                values[valuesById[2] = "MEDIA_AUTO_DOWNLOAD_QUALITY_HD"] = 2;
+                values[valuesById[3] = "MEDIA_AUTO_DOWNLOAD_QUALITY_AUTO"] = 3;
+                return values;
+            })();
+
+            return SettingsSyncAction;
         })();
 
         SyncActionValue.StarAction = (function() {
