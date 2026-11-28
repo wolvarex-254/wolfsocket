@@ -104,9 +104,17 @@
     `Royal-Blue@Tonal`, group custom wallpaper (uploaded photo), DM
     colour scheme `Emerald@Tonal` — all three messages written
     (ids `3EB0300B6C4B486D42B984`, `3EB0CD9B59C90A841D697F`,
-    `3EB028CF6409AD5388DFE9`). **Phone verification still pending**:
-    no echo/system message arrived on the socket in 30s, so Briton
-    has to confirm the theme actually changed on his phone.
+    `3EB028CF6409AD5388DFE9`). **Phone check 16:29 EAT: no changes** —
+    the theme did not apply. The first send was missing the
+    `mediatype: 'chat_theme'` marker on the stanza: plogme's
+    `relayMessage` sets it (and stanza type `media`) for
+    `CHAT_THEME_SETTING`, wolfsocket's did not, so the server dropped
+    the setting silently. Fixed in `Socket/messages-send.ts`
+    (`getMessageType` returns `media` for theme settings and
+    `relayMessage` sets `extraAttrs['mediatype'] = 'chat_theme'`).
+    Re-tested ~16:33 EAT with the fix (ids `3EB01F991609A8CD64A93F`,
+    `3EB0AA9E6CAF455DDBFB32`, `3EB0DB822E8DB182078C18`) — phone
+    verification still pending.
   - Test: `Example/test-chat-theme.ts`; unit tests:
     `src/__tests__/Utils/chat-theme.test.ts` (11 tests).
 - **`Example/test-media-download.ts`** — normal media download test.

@@ -852,7 +852,12 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 		}
 
 		await authState.keys.transaction(async () => {
-			const mediaType = getMediaType(normalizeMessageContent(message) || message)
+			const normalized = normalizeMessageContent(message) || message
+			// A chat theme setting is not media, but the server only
+			// applies it when the stanza carries mediatype 'chat_theme'
+			// (plogme's relayMessage does the same).
+			const isChatTheme = normalized.protocolMessage?.type === proto.Message.ProtocolMessage.Type.CHAT_THEME_SETTING
+			const mediaType = isChatTheme ? 'chat_theme' : getMediaType(normalized)
 			if (mediaType) {
 				extraAttrs['mediatype'] = mediaType
 			}
@@ -1347,6 +1352,13 @@ export const makeMessagesSocket = (config: SocketConfig) => {
 	const getMessageType = (message: proto.IMessage) => {
 		const normalizedMessage = normalizeMessageContent(message)
 		if (!normalizedMessage) return 'text'
+
+		// Chat theme settings travel as media-type stanzas with the
+		// 'chat_theme' mediatype marker — without it the server drops
+		// the setting silently (see relayMessage below).
+		if (normalizedMessage.protocolMessage?.type === proto.Message.ProtocolMessage.Type.CHAT_THEME_SETTING) {
+			return 'media'
+		}
 
 		if (normalizedMessage.reactionMessage || normalizedMessage.encReactionMessage) {
 			return 'reaction'
