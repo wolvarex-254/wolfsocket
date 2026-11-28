@@ -20,6 +20,32 @@ const sock = makeWASocket({ auth: state })
 sock.ev.on('creds.update', saveCreds)
 ```
 
+## Linking & testing
+
+`Example/qr-link.ts` is a QR link runner for testing against a real phone.
+It prints the pairing QR to the terminal and also writes it as
+`baileys_auth_info/qr.png`, so it can be shared as an image:
+
+```bash
+npx tsx ./Example/qr-link.ts
+```
+
+Scan it with WhatsApp > Settings > Linked devices > Link a device. The
+session is stored in `baileys_auth_info/` (gitignored) and is never cleared
+by the script — on close it reconnects unless logged out. QRs live 60s for
+the first one, then 20s each, so share the image quickly; a pairing code is
+the fallback if scanning keeps failing.
+
+`Example/test-group-archive.ts` tests group archiving end to end: it
+resolves a group from an invite link, code, or JID, joins via invite if
+needed, sends one test message, then calls
+`sock.archiveChat(jid, true, [that message])` and waits for the
+`chats.update` event confirming `archived: true`:
+
+```bash
+npx tsx ./Example/test-group-archive.ts <invite-code | invite-link | group-jid>
+```
+
 ## Native Markdown tables
 
 Send an AI response containing Markdown pipe tables through `markdownTable`. WhatsApp renders each detected table with its native rich-table interface while preserving surrounding prose.

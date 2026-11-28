@@ -2,6 +2,30 @@
 
 ## Unreleased
 
+### QR link runner and group archive test (2026-11-28)
+
+- **`Example/qr-link.ts`** — new QR link runner for testing. Prints the
+  pairing QR to the terminal with `qrcode-terminal` and also writes it as
+  `baileys_auth_info/qr.png` (plus the raw string as `qr.txt`), so it can
+  be shared as an image. Session lives in `baileys_auth_info/` (gitignored)
+  and is never cleared by the script; on close it reconnects unless logged
+  out. Live-tested 2026-11-28: linked WhatsApp account 254785471416.
+  Notes from that run: the first WhatsApp Web handshake timed out (408)
+  and the second connected; QRs live 60s for the first one, then 20s each,
+  so sharing a QR image is a race — a pairing code is the fallback.
+- **`Example/test-group-archive.ts`** — group archive test. Resolves a
+  group from an invite link/code/JID, joins via `groupAcceptInvite` if not
+  already a member, sends one test message, then calls
+  `sock.archiveChat(jid, true, [that message])` and waits for the
+  `chats.update` event confirming `archived: true`. Leaves the group
+  archived for verification on the phone. Live-tested 2026-11-28 on group
+  "WolfSocket" (`120363414160399028@g.us`): archive call returned ok and
+  the event confirmed `archived: true`.
+- **`qrcode` (+ `@types/qrcode`)** added as devDependencies so the QR
+  runner can write the PNG. `yarn.lock` was not regenerated here (no Yarn 4
+  on the test machine; install ran with npm) — run `yarn install` to
+  refresh it.
+
 ## 1.0.7 - 2026-11-22
 
 ### View once recovery (2026-11-21)
